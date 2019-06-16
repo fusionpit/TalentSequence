@@ -224,7 +224,7 @@ function TalentSequence_CreateFrame()
         icon:SetPoint("TOP", level:GetName(), "TOP");
         icon:SetPoint("BOTTOM", level:GetName(), "BOTTOM");
         icon:EnableMouse(true);
-        icon:SetScript("OnClick", function()
+        icon:SetScript("OnClick", function(self)
             local talent = self:GetParent().talent;
             local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index);
             local playerLevel = UnitLevel("player");
@@ -232,7 +232,7 @@ function TalentSequence_CreateFrame()
                 LearnTalent(talent.tab, talent.index);
             end
         end);
-        icon:SetScript("OnEnter", function()
+        icon:SetScript("OnEnter", function(self)
             if (not self.tooltip) then 
                 return;
             end
