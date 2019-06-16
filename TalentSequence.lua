@@ -218,7 +218,7 @@ function TalentSequence_CreateFrame()
         levelLabel:SetPoint("BOTTOMRIGHT", level:GetName(), "BOTTOMRIGHT");
         level.label = levelLabel;
 
-        local icon = CreateFrame("ItemButton", "$parentIcon", row);
+        local icon = CreateFrame("Button", "$parentIcon", row, "ItemButtonTemplate");
         icon:SetWidth(37);
         icon:SetPoint("LEFT", level:GetName(), "RIGHT", 4, 0);
         icon:SetPoint("TOP", level:GetName(), "TOP");
