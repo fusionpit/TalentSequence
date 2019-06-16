@@ -168,8 +168,8 @@ function TalentSequence_CreateFrame()
     mainFrame:Hide();
     -- This needs to be changed to some hooks in Classic
     local oldOnClick = TalentFrameTab_OnClick;
-    TalentFrameTab_OnClick = function(self)
-        oldOnClick(self);
+    TalentFrameTab_OnClick = function(...)
+        oldOnClick(...);
         if (mainFrame:IsShown()) then
             TalentSequence_Update(mainFrame);
         end
