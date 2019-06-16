@@ -153,8 +153,8 @@ function TalentSequence_CreateFrame()
         tile = true, tileSize = 16, edgeSize = 16,
         insets = {left = 4, right = 4, top = 4, bottom = 4}
     });
-    mainFrame:SetScript("OnShow", function()
-        TalentSequence_ScrollFirstUnlearnedTalentIntoView(mainFrame);
+    mainFrame:SetScript("OnShow", function(self)
+        TalentSequence_ScrollFirstUnlearnedTalentIntoView(self);
     end);
     mainFrame:RegisterEvent("CHARACTER_POINTS_CHANGED");
     mainFrame:RegisterEvent("SPELLS_CHANGED");
