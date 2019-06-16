@@ -1,9 +1,8 @@
-## Interface: 11302
+## Interface: 11200
 ## Title: Talent Sequence
-## Version: 0.3-alpha
+## Version: 0.1-alpha
 ## LoadOnDemand: 0
 ## Author: Sveng
-## X-Testers: /u/mrdarkey and /u/lentus
 ## Notes: Shows what order you should spend talent points in, based on bobo-talents.aerobaticapp.com
 ## SavedVariablesPerCharacter: IsTalentSequenceExpanded, TalentSequenceTalents
 

@@ -13,20 +13,20 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     hasEditBox = true,
     button1 = L["OK"],
     button2 = L["CANCEL"],
-    OnShow = function(self)
-        _G[self:GetName().."EditBox"]:SetText("");
+    OnShow = function()
+        getglobal(this:GetName().."EditBox"):SetText("");
     end,
-    OnAccept = function(self)
-        local talentsString = self.editBox:GetText();
+    OnAccept = function()
+        local talentsString = getglobal(this:GetParent():GetName().."EditBox"):GetText();
         TalentSequence_SetTalents(TalentOrderFrame, talentsString);
     end,
-    EditBoxOnEnterPressed = function(self)
-        local talentsString = _G[self:GetParent():GetName().."EditBox"]:GetText();
+    EditBoxOnEnterPressed = function()
+        local talentsString = getglobal(this:GetParent():GetName().."EditBox"):GetText();
         TalentSequence_SetTalents(TalentOrderFrame, talentsString);
-        self:GetParent():Hide();
+        this:GetParent():Hide();
     end,
-    EditBoxOnEscapePressed = function(self)
-        self:GetParent():Hide();
+    EditBoxOnEscapePressed = function()
+        this:GetParent():Hide();
     end,
     timeout = 0,
     whileDead = true,
@@ -58,7 +58,7 @@ function TalentSequence_SetRowTalent(row, talent)
         GameTooltip:SetText(row.icon.tooltip, nil, nil, nil, nil, true);
     end
 
-    local iconTexture = _G[row.icon:GetName().."IconTexture"];
+    local iconTexture = getglobal(row.icon:GetName().."IconTexture");
     if (talent.tab ~= TalentFrame.selectedTab) then
         iconTexture:SetVertexColor(1.0, 1.0, 1.0, 0.25);
     else
@@ -83,7 +83,7 @@ function TalentSequence_SetRowTalent(row, talent)
 end
 
 function TalentSequence_FindFirstUnlearnedIndex()
-    for index, talent in pairs(TalentSequenceTalents) do
+    for index, talent in TalentSequenceTalents do
         local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index);
         if (talent.rank > currentRank) then
             return index;
@@ -92,13 +92,13 @@ function TalentSequence_FindFirstUnlearnedIndex()
 end
 
 function TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
-    local numTalents = #TalentSequenceTalents;
+    local numTalents = getn(TalentSequenceTalents);
     if (numTalents <= MAX_ROWS) then
         return;
     end
 
     local scrollBar = frame.scrollBar;
-    local bar = _G[scrollBar:GetName().."ScrollBar"];
+    local bar = getglobal(scrollBar:GetName().."ScrollBar");
 
     local nextTalentIndex = TalentSequence_FindFirstUnlearnedIndex();
     if (not nextTalentIndex) then
@@ -106,7 +106,7 @@ function TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
     end
     if (nextTalentIndex == 1) then
         FauxScrollFrame_SetOffset(scrollBar, 0);
-        FauxScrollFrame_OnVerticalScroll(scrollBar, 0, ROW_HEIGHT);
+        bar:SetValue(0);
         return;
     end
     local nextTalentOffset = nextTalentIndex - 1;
@@ -114,18 +114,18 @@ function TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
         nextTalentOffset = numTalents-MAX_ROWS;
     end
     FauxScrollFrame_SetOffset(scrollBar, nextTalentOffset);
-    FauxScrollFrame_OnVerticalScroll(scrollBar, ceil(nextTalentOffset*ROW_HEIGHT-0.5), ROW_HEIGHT);
+    bar:SetValue(ceil(nextTalentOffset*ROW_HEIGHT-0.5));
 end
 
 function TalentSequence_Update(frame)
     local scrollBar = frame.scrollBar;
-    local numTalents = #TalentSequenceTalents;
+    local numTalents = getn(TalentSequenceTalents);
     FauxScrollFrame_Update(scrollBar, numTalents, MAX_ROWS, ROW_HEIGHT);
     local offset = FauxScrollFrame_GetOffset(scrollBar);
     for i = 1, MAX_ROWS do
         local talentIndex = i+offset;
         local talent = TalentSequenceTalents[talentIndex];
-        local row = _G[frame:GetName().."Row"..i];
+        local row = getglobal(frame:GetName().."Row"..i);
         TalentSequence_SetRowTalent(row, talent);
     end
     if (numTalents <= MAX_ROWS) then
@@ -153,45 +153,45 @@ function TalentSequence_CreateFrame()
         tile = true, tileSize = 16, edgeSize = 16,
         insets = {left = 4, right = 4, top = 4, bottom = 4}
     });
-    mainFrame:SetScript("OnShow", function(self)
-        TalentSequence_ScrollFirstUnlearnedTalentIntoView(self);
+    mainFrame:SetScript("OnShow", function()
+        TalentSequence_ScrollFirstUnlearnedTalentIntoView(this);
     end);
     mainFrame:RegisterEvent("CHARACTER_POINTS_CHANGED");
     mainFrame:RegisterEvent("SPELLS_CHANGED");
     mainFrame:RegisterEvent("ADDON_LOADED");
-    mainFrame:SetScript("OnEvent", function(self)
-        if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and self:IsShown()) then
-            TalentSequence_ScrollFirstUnlearnedTalentIntoView(self);
-            TalentSequence_Update(self);
+    mainFrame:SetScript("OnEvent", function()
+        if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and this:IsShown()) then
+            TalentSequence_ScrollFirstUnlearnedTalentIntoView(this);
+            TalentSequence_Update(this);
         end
     end)
     mainFrame:Hide();
     -- This needs to be changed to some hooks in Classic
     local oldOnClick = TalentFrameTab_OnClick;
-    TalentFrameTab_OnClick = function(...)
-        oldOnClick(...);
+    TalentFrameTab_OnClick = function()
+        oldOnClick();
         if (mainFrame:IsShown()) then
             TalentSequence_Update(mainFrame);
         end
     end
     local oldOnShow = TalentFrame_OnShow;
-    TalentFrame_OnShow = function(self)
-        oldOnShow(self);
+    TalentFrame_OnShow = function()
+        oldOnShow();
         if (IsTalentSequenceExpanded) then
             mainFrame:Show();
         end
     end
     local oldOnHide = TalentFrame_OnHide;
-    TalentFrame_OnHide = function(self)
-        oldOnHide(self);
+    TalentFrame_OnHide = function()
+        oldOnHide();
         mainFrame:Hide();
     end
     
     local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar", mainFrame, "FauxScrollFrameTemplate");
     scrollBar:SetPoint("TOPLEFT", 0, -8);
     scrollBar:SetPoint("BOTTOMRIGHT", -30, 8);
-    scrollBar:SetScript("OnVerticalScroll", function(self, offset)
-        FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT, function()
+    scrollBar:SetScript("OnVerticalScroll", function()
+        FauxScrollFrame_OnVerticalScroll(ROW_HEIGHT, function()
             TalentSequence_Update(mainFrame);
         end);
     end);
@@ -224,20 +224,20 @@ function TalentSequence_CreateFrame()
         icon:SetPoint("TOP", level:GetName(), "TOP");
         icon:SetPoint("BOTTOM", level:GetName(), "BOTTOM");
         icon:EnableMouse(true);
-        icon:SetScript("OnClick", function(self)
-            local talent = self:GetParent().talent;
+        icon:SetScript("OnClick", function()
+            local talent = this:GetParent().talent;
             local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index);
             local playerLevel = UnitLevel("player");
             if (currentRank + 1 == talent.rank and playerLevel >= talent.level) then
                 LearnTalent(talent.tab, talent.index);
             end
         end);
-        icon:SetScript("OnEnter", function(self)
-            if (not self.tooltip) then 
+        icon:SetScript("OnEnter", function()
+            if (not this.tooltip) then 
                 return;
             end
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, -ROW_HEIGHT);
-            GameTooltip:SetText(self.tooltip, nil, nil, nil, nil, true);
+            GameTooltip:SetOwner(this, "ANCHOR_RIGHT", 0, -ROW_HEIGHT);
+            GameTooltip:SetText(this.tooltip, nil, nil, nil, nil, true);
             GameTooltip:Show();
         end);
         icon:SetScript("OnLeave", function()
@@ -283,19 +283,19 @@ function TalentSequence_CreateFrame()
         showButton:SetText("<<");
     end
     showButton.tooltip = L["TOGGLE"];
-    showButton:SetScript("OnClick", function(self)
+    showButton:SetScript("OnClick", function()
         IsTalentSequenceExpanded = not IsTalentSequenceExpanded;
         if (IsTalentSequenceExpanded) then
             mainFrame:Show();
-            self:SetText("<<");
+            this:SetText("<<");
         else
             mainFrame:Hide();
-            self:SetText(">>");
+            this:SetText(">>");
         end
     end);
-    showButton:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-        GameTooltip:SetText(self.tooltip, nil, nil, nil, nil, true);
+    showButton:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
+        GameTooltip:SetText(this.tooltip, nil, nil, nil, nil, true);
         GameTooltip:Show();
     end);
     showButton:SetScript("OnLeave", function()
@@ -306,17 +306,16 @@ function TalentSequence_CreateFrame()
 end
 
 local talentSequenceEventFrame = CreateFrame("Frame");
-talentSequenceEventFrame:SetScript("OnEvent", function(self, event, ...)
-    if (event == "ADDON_LOADED" and ... == "TalentSequence") then
-        
+talentSequenceEventFrame:SetScript("OnEvent", function()
+    if (event == "ADDON_LOADED" and arg1 == "TalentSequence") then
         if (not TalentSequenceTalents) then
             TalentSequenceTalents = {};
         end
         if (IsTalentSequenceExpanded == 0) then
             IsTalentSequenceExpanded = false;
         end
-    elseif (event == "ADDON_LOADED" and ... == "Blizzard_TalentUI") then
-        self:UnregisterEvent("ADDON_LOADED");
+    elseif (event == "ADDON_LOADED" and arg1 == "Blizzard_TalentUI") then
+        this:UnregisterEvent("ADDON_LOADED");
         TalentSequence_CreateFrame();
         return;
     end
