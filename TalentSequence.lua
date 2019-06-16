@@ -106,7 +106,7 @@ function TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
     end
     if (nextTalentIndex == 1) then
         FauxScrollFrame_SetOffset(scrollBar, 0);
-        bar:SetValue(0);
+        FauxScrollFrame_OnVerticalScroll(scrollBar, 0, ROW_HEIGHT);
         return;
     end
     local nextTalentOffset = nextTalentIndex - 1;
@@ -114,7 +114,7 @@ function TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
         nextTalentOffset = numTalents-MAX_ROWS;
     end
     FauxScrollFrame_SetOffset(scrollBar, nextTalentOffset);
-    bar:SetValue(ceil(nextTalentOffset*ROW_HEIGHT-0.5));
+    FauxScrollFrame_OnVerticalScroll(scrollBar, ceil(nextTalentOffset*ROW_HEIGHT-0.5), ROW_HEIGHT);
 end
 
 function TalentSequence_Update(frame)
@@ -190,8 +190,8 @@ function TalentSequence_CreateFrame()
     local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar", mainFrame, "FauxScrollFrameTemplate");
     scrollBar:SetPoint("TOPLEFT", 0, -8);
     scrollBar:SetPoint("BOTTOMRIGHT", -30, 8);
-    scrollBar:SetScript("OnVerticalScroll", function()
-        FauxScrollFrame_OnVerticalScroll(ROW_HEIGHT, function()
+    scrollBar:SetScript("OnVerticalScroll", function(self, offset)
+        FauxScrollFrame_OnVerticalScroll(self, offset, ROW_HEIGHT, function()
             TalentSequence_Update(mainFrame);
         end);
     end);
