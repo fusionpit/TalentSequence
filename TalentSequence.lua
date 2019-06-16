@@ -17,7 +17,7 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
         _G[self:GetName().."EditBox"]:SetText("");
     end,
     OnAccept = function(self)
-        local talentsString = _G[self:GetParent():GetName().."EditBox"]:GetText();
+        local talentsString = self.editBox:GetText();
         TalentSequence_SetTalents(TalentOrderFrame, talentsString);
     end,
     EditBoxOnEnterPressed = function(self)
