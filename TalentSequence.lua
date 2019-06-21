@@ -78,7 +78,7 @@ function TalentSequence_SetRowTalent(row, talent)
         row.icon.rank:SetTextColor(GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b);
         iconTexture:SetDesaturated(1);
     else
-        iconTexture:SetDesaturated(0);
+        iconTexture:SetDesaturated(nil);
     end
 end
 
