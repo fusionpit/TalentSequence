@@ -158,8 +158,7 @@ function TalentSequence_CreateFrame()
     end);
     mainFrame:RegisterEvent("CHARACTER_POINTS_CHANGED");
     mainFrame:RegisterEvent("SPELLS_CHANGED");
-    mainFrame:RegisterEvent("ADDON_LOADED");
-    mainFrame:SetScript("OnEvent", function(self)
+    mainFrame:SetScript("OnEvent", function(self, event, ...)
         if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and self:IsShown()) then
             TalentSequence_ScrollFirstUnlearnedTalentIntoView(self);
             TalentSequence_Update(self);
@@ -308,7 +307,6 @@ end
 local talentSequenceEventFrame = CreateFrame("Frame");
 talentSequenceEventFrame:SetScript("OnEvent", function(self, event, ...)
     if (event == "ADDON_LOADED" and ... == "TalentSequence") then
-        
         if (not TalentSequenceTalents) then
             TalentSequenceTalents = {};
         end
@@ -323,7 +321,3 @@ talentSequenceEventFrame:SetScript("OnEvent", function(self, event, ...)
 end);
 talentSequenceEventFrame:RegisterEvent("ADDON_LOADED");
 
---local talentsString = "FyFNFzFAFOIxFKF0F1F2FFFGFUF3F4FVFWFBFCFXFLFSFTFYFZF8F9F_F5F6FJF.F7FMH-EPEQFPFQERESETEZE0E1E2E3E4FRFH";
---local talentsString = "FyFN";
---local talentsString = "FyFNFzFAFOIxFKF0F1F2";
---local talentsString = "FyFNFzFAFOIxFKF0F1F2FF";
