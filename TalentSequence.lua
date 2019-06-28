@@ -37,6 +37,7 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
 function TalentSequence_SetRowTalent(row, talent)
     if (not talent) then
         row:Hide();
+        row.talent = nil;
         return;
     else
         row:Show();
