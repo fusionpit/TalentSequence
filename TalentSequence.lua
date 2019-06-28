@@ -165,26 +165,20 @@ function TalentSequence_CreateFrame()
         end
     end)
     mainFrame:Hide();
-    -- This needs to be changed to some hooks in Classic
-    local oldOnClick = TalentFrameTab_OnClick;
-    TalentFrameTab_OnClick = function(...)
-        oldOnClick(...);
+
+    hooksecurefunc("TalentFrameTab_OnClick", function()
         if (mainFrame:IsShown()) then
             TalentSequence_Update(mainFrame);
         end
-    end
-    local oldOnShow = TalentFrame_OnShow;
-    TalentFrame_OnShow = function(self)
-        oldOnShow(self);
+    end);
+    TalentFrame:HookScript("OnShow", function()
         if (IsTalentSequenceExpanded) then
             mainFrame:Show();
         end
-    end
-    local oldOnHide = TalentFrame_OnHide;
-    TalentFrame_OnHide = function(self)
-        oldOnHide(self);
+    end);
+    TalentFrame:HookScript("OnHide", function()
         mainFrame:Hide();
-    end
+    end);
     
     local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar", mainFrame, "FauxScrollFrameTemplate");
     scrollBar:SetPoint("TOPLEFT", 0, -8);
