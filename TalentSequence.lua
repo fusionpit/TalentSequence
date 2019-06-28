@@ -158,7 +158,6 @@ function TalentSequence_CreateFrame()
     end);
     mainFrame:RegisterEvent("CHARACTER_POINTS_CHANGED");
     mainFrame:RegisterEvent("SPELLS_CHANGED");
-    mainFrame:RegisterEvent("ADDON_LOADED");
     mainFrame:SetScript("OnEvent", function()
         if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and this:IsShown()) then
             TalentSequence_ScrollFirstUnlearnedTalentIntoView(this);
@@ -307,22 +306,17 @@ end
 
 local talentSequenceEventFrame = CreateFrame("Frame");
 talentSequenceEventFrame:SetScript("OnEvent", function()
-    if (event == "ADDON_LOADED" and arg1 == "TalentSequence") then
-        if (not TalentSequenceTalents) then
+    if ((event == "VARIABLES_LOADED") or (event == "ADDON_LOADED" and arg1 == "TalentSequence")) then
+        if (TalentSequenceTalents == nil) then
             TalentSequenceTalents = {};
         end
         if (IsTalentSequenceExpanded == 0) then
             IsTalentSequenceExpanded = false;
         end
-    elseif (event == "ADDON_LOADED" and arg1 == "Blizzard_TalentUI") then
-        this:UnregisterEvent("ADDON_LOADED");
-        TalentSequence_CreateFrame();
-        return;
+        if (TalentOrderFrame == nil) then
+            TalentSequence_CreateFrame();
+        end
     end
 end);
+talentSequenceEventFrame:RegisterEvent("VARIABLES_LOADED");
 talentSequenceEventFrame:RegisterEvent("ADDON_LOADED");
-
---local talentsString = "FyFNFzFAFOIxFKF0F1F2FFFGFUF3F4FVFWFBFCFXFLFSFTFYFZF8F9F_F5F6FJF.F7FMH-EPEQFPFQERESETEZE0E1E2E3E4FRFH";
---local talentsString = "FyFN";
---local talentsString = "FyFNFzFAFOIxFKF0F1F2";
---local talentsString = "FyFNFzFAFOIxFKF0F1F2FF";
