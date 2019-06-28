@@ -301,7 +301,7 @@ function TalentSequence_CreateFrame()
         GameTooltip:Hide();
     end);
     showButton:SetHeight(14);
-    showButton:SetWidth(18);
+    showButton:SetWidth(22);
 end
 
 local talentSequenceEventFrame = CreateFrame("Frame");
