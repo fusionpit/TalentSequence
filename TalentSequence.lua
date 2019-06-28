@@ -313,11 +313,10 @@ talentSequenceEventFrame:SetScript("OnEvent", function(self, event, ...)
         if (IsTalentSequenceExpanded == 0) then
             IsTalentSequenceExpanded = false;
         end
-    elseif (event == "ADDON_LOADED" and ... == "Blizzard_TalentUI") then
+        if (TalentOrderFrame == nil) then
+            TalentSequence_CreateFrame();
+        end
         self:UnregisterEvent("ADDON_LOADED");
-        TalentSequence_CreateFrame();
-        return;
     end
 end);
 talentSequenceEventFrame:RegisterEvent("ADDON_LOADED");
-

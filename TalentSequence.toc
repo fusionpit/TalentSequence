@@ -2,6 +2,8 @@
 ## Title: Talent Sequence
 ## Version: 0.1-beta
 ## Author: Sveng
+## LoadOnDemand: 1
+## LoadWith: Blizzard_TalentUI
 ## X-Testers: /u/mrdarkey and /u/lentus
 ## Notes: Shows what order you should spend talent points in, based on bobo-talents.aerobaticapp.com
 ## SavedVariablesPerCharacter: IsTalentSequenceExpanded, TalentSequenceTalents
