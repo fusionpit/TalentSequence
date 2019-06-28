@@ -28,7 +28,6 @@ end
 
 BoboTalents = {};
 function BoboTalents.GetTalents(talentString)
-    local origTS = talentString;
     local _, endIndex = strfind(talentString, "talents=");
     if (endIndex) then
         talentString = strsub(talentString, endIndex+1);
