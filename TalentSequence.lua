@@ -171,14 +171,6 @@ function TalentSequence_CreateFrame()
             TalentSequence_Update(mainFrame);
         end
     end);
-    TalentFrame:HookScript("OnShow", function()
-        if (IsTalentSequenceExpanded) then
-            mainFrame:Show();
-        end
-    end);
-    TalentFrame:HookScript("OnHide", function()
-        mainFrame:Hide();
-    end);
     
     local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar", mainFrame, "FauxScrollFrameTemplate");
     scrollBar:SetPoint("TOPLEFT", 0, -8);
@@ -274,6 +266,7 @@ function TalentSequence_CreateFrame()
     showButton:SetText(">>");
     if (IsTalentSequenceExpanded) then
         showButton:SetText("<<");
+        mainFrame:Show();
     end
     showButton.tooltip = L["TOGGLE"];
     showButton:SetScript("OnClick", function(self)
