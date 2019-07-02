@@ -1,18 +1,19 @@
+local _, ts = ...
+
 local ROW_HEIGHT = 38
 local MAX_ROWS = 10 
 local SCROLLING_WIDTH = 100;
 local NONSCROLLING_WIDTH = 82;
 local IMPORT_DIALOG = "TALENTSEQUENCEIMPORTDIALOG";
-local L = TalentSequenceText;
 
 IsTalentSequenceExpanded = false;
 TalentSequenceTalents = {};
 
 StaticPopupDialogs[IMPORT_DIALOG] = {
-    text = L["IMPORT_DIALOG"],
+    text = ts.L["IMPORT_DIALOG"],
     hasEditBox = true,
-    button1 = L["OK"],
-    button2 = L["CANCEL"],
+    button1 = ts.L["OK"],
+    button2 = ts.L["CANCEL"],
     OnShow = function(self)
         _G[self:GetName().."EditBox"]:SetText("");
     end,
@@ -256,7 +257,7 @@ function TalentSequence_CreateFrame()
     importButton:SetPoint("TOP", "TalentOrderFrame", "BOTTOM", 0, 4);
     importButton:SetPoint("RIGHT", "TalentOrderFrame");
     importButton:SetPoint("LEFT", "TalentOrderFrame");
-    importButton:SetText(L["IMPORT"]);
+    importButton:SetText(ts.L["IMPORT"]);
     importButton:SetHeight(22);
     importButton:SetScript("OnClick", function()
         StaticPopup_Show(IMPORT_DIALOG);
@@ -269,7 +270,7 @@ function TalentSequence_CreateFrame()
         showButton:SetText("<<");
         mainFrame:Show();
     end
-    showButton.tooltip = L["TOGGLE"];
+    showButton.tooltip = ts.L["TOGGLE"];
     showButton:SetScript("OnClick", function(self)
         IsTalentSequenceExpanded = not IsTalentSequenceExpanded;
         if (IsTalentSequenceExpanded) then

@@ -1,4 +1,8 @@
-TalentSequenceTextLocales = {
+local _, ts = ...
+
+local GetLocale = GetLocale
+
+local localeText = {
     enUS = {
         TOGGLE = "Toggle Talent Sequence Window",
         IMPORT = "Import",
@@ -8,4 +12,11 @@ TalentSequenceTextLocales = {
     }
 };
 
-TalentSequenceText = TalentSequenceTextLocales[GetLocale()] or TalentSequenceTextLocales["enUS"];
+ts.L = localeText["enUS"]
+local locale = GetLocale()
+if (locale == "enUS" or locale == "enGB" or localeText[locale] == nil) then
+    return
+end
+for k, v in pairs(localeText[locale]) do
+    ts.L[k] = v
+end
