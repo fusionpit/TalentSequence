@@ -1,5 +1,20 @@
 local _, ts = ...
 
+local GetTalentInfo = GetTalentInfo
+local GetTalentTabInfo = GetTalentTabInfo
+local SetItemButtonTexture = SetItemButtonTexture
+local UnitLevel = UnitLevel
+local LearnTalent = LearnTalent
+local CreateFrame = CreateFrame
+local StaticPopup_Show = StaticPopup_Show
+local FauxScrollFrame_SetOffset = FauxScrollFrame_SetOffset
+local FauxScrollFrame_GetOffset = FauxScrollFrame_GetOffset
+local FauxScrollFrame_OnVerticalScroll = FauxScrollFrame_OnVerticalScroll
+local FauxScrollFrame_Update = FauxScrollFrame_Update
+local hooksecurefunc = hooksecurefunc
+local format = format
+local ceil = ceil
+
 local ROW_HEIGHT = 38
 local MAX_ROWS = 10
 local SCROLLING_WIDTH = 100
@@ -19,11 +34,11 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     end,
     OnAccept = function(self)
         local talentsString = self.editBox:GetText()
-        TalentSequence_SetTalents(TalentOrderFrame, talentsString)
+        ts.SetTalents(TalentOrderFrame, talentsString)
     end,
     EditBoxOnEnterPressed = function(self)
         local talentsString = _G[self:GetParent():GetName() .. "EditBox"]:GetText()
-        TalentSequence_SetTalents(TalentOrderFrame, talentsString)
+        ts.SetTalents(TalentOrderFrame, talentsString)
         self:GetParent():Hide()
     end,
     EditBoxOnEscapePressed = function(self)
@@ -35,7 +50,7 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     preferredIndex = 3
 }
 
-function TalentSequence_SetRowTalent(row, talent)
+function ts.SetRowTalent(row, talent)
     if (not talent) then
         row:Hide()
         row.talent = nil
@@ -48,7 +63,7 @@ function TalentSequence_SetRowTalent(row, talent)
 
     SetItemButtonTexture(row.icon, icon)
     local tabName = GetTalentTabInfo(talent.tab)
-    row.icon.tooltip = name .. string.format(" (%d/%d) - %s", talent.rank, maxRank, tabName)
+    row.icon.tooltip = name .. format(" (%d/%d) - %s", talent.rank, maxRank, tabName)
     row.icon.rank:SetText(talent.rank)
 
     if (talent.rank < maxRank) then
@@ -84,7 +99,7 @@ function TalentSequence_SetRowTalent(row, talent)
     end
 end
 
-function TalentSequence_FindFirstUnlearnedIndex()
+function ts.FindFirstUnlearnedIndex()
     for index, talent in pairs(TalentSequenceTalents) do
         local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index)
         if (talent.rank > currentRank) then
@@ -93,16 +108,15 @@ function TalentSequence_FindFirstUnlearnedIndex()
     end
 end
 
-function TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
+function ts.ScrollFirstUnlearnedTalentIntoView(frame)
     local numTalents = #TalentSequenceTalents
     if (numTalents <= MAX_ROWS) then
         return
     end
 
     local scrollBar = frame.scrollBar
-    local bar = _G[scrollBar:GetName() .. "ScrollBar"]
 
-    local nextTalentIndex = TalentSequence_FindFirstUnlearnedIndex()
+    local nextTalentIndex = ts.FindFirstUnlearnedIndex()
     if (not nextTalentIndex) then
         return
     end
@@ -119,7 +133,7 @@ function TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
     FauxScrollFrame_OnVerticalScroll(scrollBar, ceil(nextTalentOffset * ROW_HEIGHT - 0.5), ROW_HEIGHT)
 end
 
-function TalentSequence_Update(frame)
+function ts.Update(frame)
     local scrollBar = frame.scrollBar
     local numTalents = #TalentSequenceTalents
     FauxScrollFrame_Update(scrollBar, numTalents, MAX_ROWS, ROW_HEIGHT)
@@ -128,7 +142,7 @@ function TalentSequence_Update(frame)
         local talentIndex = i + offset
         local talent = TalentSequenceTalents[talentIndex]
         local row = _G[frame:GetName() .. "Row" .. i]
-        TalentSequence_SetRowTalent(row, talent)
+        ts.SetRowTalent(row, talent)
     end
     if (numTalents <= MAX_ROWS) then
         frame:SetWidth(NONSCROLLING_WIDTH)
@@ -137,15 +151,15 @@ function TalentSequence_Update(frame)
     end
 end
 
-function TalentSequence_SetTalents(frame, talentsString)
-    TalentSequenceTalents = BoboTalents.GetTalents(talentsString)
+function ts.SetTalents(frame, talentsString)
+    TalentSequenceTalents = ts.BoboTalents.GetTalents(talentsString)
     if (frame:IsShown()) then
-        TalentSequence_ScrollFirstUnlearnedTalentIntoView(frame)
-        TalentSequence_Update(frame)
+        ts.ScrollFirstUnlearnedTalentIntoView(frame)
+        ts.Update(frame)
     end
 end
 
-function TalentSequence_CreateFrame()
+function ts.CreateFrame()
     local mainFrame = CreateFrame("Frame", "TalentOrderFrame", TalentFrame)
     mainFrame:SetPoint("TOPLEFT", "TalentFrame", "TOPRIGHT", -36, -12)
     mainFrame:SetPoint("BOTTOMLEFT", "TalentFrame", "BOTTOMRIGHT", 0, 72)
@@ -162,17 +176,17 @@ function TalentSequence_CreateFrame()
     mainFrame:SetScript(
         "OnShow",
         function(self)
-            TalentSequence_ScrollFirstUnlearnedTalentIntoView(self)
+            ts.ScrollFirstUnlearnedTalentIntoView(self)
         end
     )
     mainFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
     mainFrame:RegisterEvent("SPELLS_CHANGED")
     mainFrame:SetScript(
         "OnEvent",
-        function(self, event, ...)
+        function(self, event)
             if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and self:IsShown()) then
-                TalentSequence_ScrollFirstUnlearnedTalentIntoView(self)
-                TalentSequence_Update(self)
+                ts.ScrollFirstUnlearnedTalentIntoView(self)
+                ts.Update(self)
             end
         end
     )
@@ -182,7 +196,7 @@ function TalentSequence_CreateFrame()
         "TalentFrameTab_OnClick",
         function()
             if (mainFrame:IsShown()) then
-                TalentSequence_Update(mainFrame)
+                ts.Update(mainFrame)
             end
         end
     )
@@ -198,7 +212,7 @@ function TalentSequence_CreateFrame()
                 offset,
                 ROW_HEIGHT,
                 function()
-                    TalentSequence_Update(mainFrame)
+                    ts.Update(mainFrame)
                 end
             )
         end
@@ -206,7 +220,7 @@ function TalentSequence_CreateFrame()
     scrollBar:SetScript(
         "OnShow",
         function()
-            TalentSequence_Update(mainFrame)
+            ts.Update(mainFrame)
         end
     )
     mainFrame.scrollBar = scrollBar
@@ -350,7 +364,7 @@ talentSequenceEventFrame:SetScript(
                 IsTalentSequenceExpanded = false
             end
             if (TalentOrderFrame == nil) then
-                TalentSequence_CreateFrame()
+                ts.CreateFrame()
             end
             self:UnregisterEvent("ADDON_LOADED")
         end
