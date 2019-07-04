@@ -16,6 +16,7 @@ read_globals = {
     "GameTooltip",
     -- blizzard frames
     "TalentFrame",
+    "UIParent",
     -- function aliases
     "strlen",
     "strsub",
