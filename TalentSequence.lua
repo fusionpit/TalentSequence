@@ -55,6 +55,7 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     preferredIndex = 3
 }
 
+local tooltip = CreateFrame("GameTooltip", "TalentSequenceTooltip", UIParent, "GameTooltipTemplate")
 function ts.SetRowTalent(row, talent)
     if (not talent) then
         row:Hide()
@@ -76,8 +77,8 @@ function ts.SetRowTalent(row, talent)
     else
         row.icon.rank:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
     end
-    if (GameTooltip:IsOwned(row.icon) and row.icon.tooltip) then
-        GameTooltip:SetText(row.icon.tooltip, nil, nil, nil, nil, true)
+    if (tooltip:IsOwned(row.icon) and row.icon.tooltip) then
+        tooltip:SetText(row.icon.tooltip, nil, nil, nil, nil, true)
     end
 
     local iconTexture = _G[row.icon:GetName() .. "IconTexture"]
@@ -272,15 +273,15 @@ function ts.CreateFrame()
                 if (not self.tooltip) then
                     return
                 end
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, -ROW_HEIGHT)
-                GameTooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
-                GameTooltip:Show()
+                tooltip:SetOwner(self, "ANCHOR_RIGHT")
+                tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
+                tooltip:Show()
             end
         )
         icon:SetScript(
             "OnLeave",
             function()
-                GameTooltip:Hide()
+                tooltip:Hide()
             end
         )
 
@@ -343,15 +344,15 @@ function ts.CreateFrame()
     showButton:SetScript(
         "OnEnter",
         function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
-            GameTooltip:Show()
+            tooltip:SetOwner(self, "ANCHOR_RIGHT")
+            tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
+            tooltip:Show()
         end
     )
     showButton:SetScript(
         "OnLeave",
         function()
-            GameTooltip:Hide()
+            tooltip:Hide()
         end
     )
     showButton:SetHeight(14)
