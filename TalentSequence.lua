@@ -39,11 +39,11 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     end,
     OnAccept = function(self)
         local talentsString = self.editBox:GetText()
-        ts.SetTalents(TalentOrderFrame, talentsString)
+        ts.SetTalents(ts.MainFrame, talentsString)
     end,
     EditBoxOnEnterPressed = function(self)
         local talentsString = _G[self:GetParent():GetName() .. "EditBox"]:GetText()
-        ts.SetTalents(TalentOrderFrame, talentsString)
+        ts.SetTalents(ts.MainFrame, talentsString)
         self:GetParent():Hide()
     end,
     EditBoxOnEscapePressed = function(self)
@@ -105,7 +105,7 @@ function ts.SetRowTalent(row, talent)
 end
 
 function ts.FindFirstUnlearnedIndex()
-    for index, talent in pairs(TalentSequenceTalents) do
+    for index, talent in pairs(ts.Talents) do
         local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index)
         if (talent.rank > currentRank) then
             return index
@@ -114,7 +114,7 @@ function ts.FindFirstUnlearnedIndex()
 end
 
 function ts.ScrollFirstUnlearnedTalentIntoView(frame)
-    local numTalents = #TalentSequenceTalents
+    local numTalents = #ts.Talents
     if (numTalents <= MAX_ROWS) then
         return
     end
@@ -140,12 +140,12 @@ end
 
 function ts.Update(frame)
     local scrollBar = frame.scrollBar
-    local numTalents = #TalentSequenceTalents
+    local numTalents = #ts.Talents
     FauxScrollFrame_Update(scrollBar, numTalents, MAX_ROWS, ROW_HEIGHT)
     local offset = FauxScrollFrame_GetOffset(scrollBar)
     for i = 1, MAX_ROWS do
         local talentIndex = i + offset
-        local talent = TalentSequenceTalents[talentIndex]
+        local talent = ts.Talents[talentIndex]
         local row = _G[frame:GetName() .. "Row" .. i]
         ts.SetRowTalent(row, talent)
     end
@@ -157,7 +157,8 @@ function ts.Update(frame)
 end
 
 function ts.SetTalents(frame, talentsString)
-    TalentSequenceTalents = ts.BoboTalents.GetTalents(talentsString)
+    ts.Talents = ts.BoboTalents.GetTalents(talentsString)
+    TalentSequenceTalents = ts.Talents
     if (frame:IsShown()) then
         ts.ScrollFirstUnlearnedTalentIntoView(frame)
         ts.Update(frame)
@@ -305,10 +306,10 @@ function ts.CreateFrame()
         rawset(rows, i, row)
     end
 
-    local importButton = CreateFrame("Button", "$parentImportButton", TalentOrderFrame, "UIPanelButtonTemplate")
-    importButton:SetPoint("TOP", "TalentOrderFrame", "BOTTOM", 0, 4)
-    importButton:SetPoint("RIGHT", "TalentOrderFrame")
-    importButton:SetPoint("LEFT", "TalentOrderFrame")
+    local importButton = CreateFrame("Button", "$parentImportButton", mainFrame, "UIPanelButtonTemplate")
+    importButton:SetPoint("TOP", mainFrame, "BOTTOM", 0, 4)
+    importButton:SetPoint("RIGHT", mainFrame)
+    importButton:SetPoint("LEFT", mainFrame)
     importButton:SetText(ts.L["IMPORT"])
     importButton:SetHeight(22)
     importButton:SetScript(
@@ -355,6 +356,8 @@ function ts.CreateFrame()
     )
     showButton:SetHeight(14)
     showButton:SetWidth(showButton:GetTextWidth() + 10)
+
+    ts.MainFrame = mainFrame;
 end
 
 local talentSequenceEventFrame = CreateFrame("Frame")
@@ -365,10 +368,11 @@ talentSequenceEventFrame:SetScript(
             if (not TalentSequenceTalents) then
                 TalentSequenceTalents = {}
             end
+            ts.Talents = TalentSequenceTalents
             if (IsTalentSequenceExpanded == 0) then
                 IsTalentSequenceExpanded = false
             end
-            if (TalentOrderFrame == nil) then
+            if (ts.MainFrame == nil) then
                 ts.CreateFrame()
             end
             self:UnregisterEvent("ADDON_LOADED")
