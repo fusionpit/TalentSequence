@@ -241,20 +241,20 @@ function ts.CreateFrame()
 
         local level = CreateFrame("Frame", "$parentLevel", row)
         level:SetWidth(16)
-        level:SetPoint("LEFT", "TalentOrderFrameRow" .. i, "LEFT")
-        level:SetPoint("TOP", "TalentOrderFrameRow" .. i, "TOP")
-        level:SetPoint("BOTTOM", "TalentOrderFrameRow" .. i, "BOTTOM")
+        level:SetPoint("LEFT", row, "LEFT")
+        level:SetPoint("TOP", row, "TOP")
+        level:SetPoint("BOTTOM", row, "BOTTOM")
 
         local levelLabel = level:CreateFontString(nil, "OVERLAY", "GameFontWhite")
-        levelLabel:SetPoint("TOPLEFT", level:GetName(), "TOPLEFT")
-        levelLabel:SetPoint("BOTTOMRIGHT", level:GetName(), "BOTTOMRIGHT")
+        levelLabel:SetPoint("TOPLEFT", level, "TOPLEFT")
+        levelLabel:SetPoint("BOTTOMRIGHT", level, "BOTTOMRIGHT")
         level.label = levelLabel
 
         local icon = CreateFrame("Button", "$parentIcon", row, "ItemButtonTemplate")
         icon:SetWidth(37)
-        icon:SetPoint("LEFT", level:GetName(), "RIGHT", 4, 0)
-        icon:SetPoint("TOP", level:GetName(), "TOP")
-        icon:SetPoint("BOTTOM", level:GetName(), "BOTTOM")
+        icon:SetPoint("LEFT", level, "RIGHT", 4, 0)
+        icon:SetPoint("TOP", level, "TOP")
+        icon:SetPoint("BOTTOM", level, "BOTTOM")
         icon:EnableMouse(true)
         icon:SetScript(
             "OnClick",
