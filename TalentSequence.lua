@@ -291,7 +291,7 @@ function ts.CreateFrame()
         rankBorderTexture:SetPoint("CENTER", icon, "BOTTOMRIGHT")
         rankBorderTexture:SetTexture("Interface\\TalentFrame\\TalentFrame-RankBorder")
         local rankText = icon:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rankText:SetPoint("CENTER", rankBorderTexture, "CENTER", -1, 0)
+        rankText:SetPoint("CENTER", rankBorderTexture)
         icon.rank = rankText
 
         row.icon = icon
