@@ -1,5 +1,6 @@
 local _, ts = ...
 
+local _G = _G
 local GetTalentInfo = GetTalentInfo
 local GetTalentTabInfo = GetTalentTabInfo
 local SetItemButtonTexture = SetItemButtonTexture
@@ -14,6 +15,10 @@ local FauxScrollFrame_Update = FauxScrollFrame_Update
 local hooksecurefunc = hooksecurefunc
 local format = format
 local ceil = ceil
+local GREEN_FONT_COLOR = GREEN_FONT_COLOR
+local NORMAL_FONT_COLOR = NORMAL_FONT_COLOR
+local RED_FONT_COLOR = RED_FONT_COLOR
+local GRAY_FONT_COLOR = GRAY_FONT_COLOR
 
 local ROW_HEIGHT = 38
 local MAX_ROWS = 10
