@@ -1381,11 +1381,17 @@ for i = 1, charsetLength do
     zeroIndexInSet[char] = i - 1
 end
 
+local charsetComplementSet = "[^"..charset.."]"
 ts.BoboTalents = {}
 function ts.BoboTalents.GetTalents(talentString)
     local _, endIndex = strfind(talentString, "t[alents]?=")
     if (endIndex) then
         talentString = strsub(talentString, endIndex + 1)
+        -- check for and strip any additional characters not in charset
+        local startIndex = strfind(talentString, charsetComplementSet)
+        if (startIndex) then
+            talentString = strsub(talentString, 1, startIndex)
+        end
     end
     local talents = {}
     local talentStringLength = strlen(talentString)
