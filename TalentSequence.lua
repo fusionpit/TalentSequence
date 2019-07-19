@@ -61,15 +61,15 @@ function ts.SetRowTalent(row, talent)
         row:Hide()
         row.talent = nil
         return
-    else
-        row:Show()
-        row.talent = talent
     end
+
+    row:Show()
+    row.talent = talent
     local name, icon, _, _, currentRank, maxRank = GetTalentInfo(talent.tab, talent.index)
 
     SetItemButtonTexture(row.icon, icon)
     local tabName = GetTalentTabInfo(talent.tab)
-    row.icon.tooltip = name .. format(" (%d/%d) - %s", talent.rank, maxRank, tabName)
+    row.icon.tooltip = format("%s (%d/%d) - %s", name, talent.rank, maxRank, tabName)
     row.icon.rank:SetText(talent.rank)
 
     if (talent.rank < maxRank) then
@@ -147,7 +147,7 @@ function ts.Update(frame)
     for i = 1, MAX_ROWS do
         local talentIndex = i + offset
         local talent = ts.Talents[talentIndex]
-        local row = _G[frame:GetName() .. "Row" .. i]
+        local row = frame.rows[i]
         ts.SetRowTalent(row, talent)
     end
     if (numTalents <= MAX_ROWS) then
@@ -233,7 +233,6 @@ function ts.CreateFrame()
     mainFrame.scrollBar = scrollBar
 
     local rows = {}
-    local lastRow = nil
     for i = 1, MAX_ROWS do
         local row = CreateFrame("Frame", "$parentRow" .. i, mainFrame)
         row:SetWidth(110)
@@ -297,15 +296,15 @@ function ts.CreateFrame()
         row.icon = icon
         row.level = level
 
-        if (lastRow == nil) then
+        if (rows[i - 1] == nil) then
             row:SetPoint("TOPLEFT", mainFrame, 8, -8)
         else
             row:SetPoint("TOPLEFT", rows[i - 1], "BOTTOMLEFT", 0, -2)
         end
-        lastRow = row
 
         rawset(rows, i, row)
     end
+    mainFrame.rows = rows
 
     local importButton = CreateFrame("Button", "$parentImportButton", mainFrame, "UIPanelButtonTemplate")
     importButton:SetPoint("TOP", mainFrame, "BOTTOM", 0, 4)
@@ -358,7 +357,7 @@ function ts.CreateFrame()
     showButton:SetHeight(14)
     showButton:SetWidth(showButton:GetTextWidth() + 10)
 
-    ts.MainFrame = mainFrame;
+    ts.MainFrame = mainFrame
 end
 
 local talentSequenceEventFrame = CreateFrame("Frame")
