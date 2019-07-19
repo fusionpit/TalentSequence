@@ -1375,10 +1375,10 @@ local talentMap = {
 }
 
 local charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.~-"
-local byChar, charsetLength = {}, strlen(charset)
+local zeroIndexInSet, charsetLength = {}, strlen(charset)
 for i = 1, charsetLength do
     local char = strsub(charset, i, i)
-    byChar[char] = i - 1
+    zeroIndexInSet[char] = i - 1
 end
 
 ts.BoboTalents = {}
@@ -1395,7 +1395,7 @@ function ts.BoboTalents.GetTalents(talentString)
         if (strlen(encodedId) == 2) then
             local firstChar = strsub(encodedId, 1, 1)
             local secondChar = strsub(encodedId, 2, 2)
-            local decodedId = byChar[firstChar] * charsetLength + byChar[secondChar]
+            local decodedId = zeroIndexInSet[firstChar] * charsetLength + zeroIndexInSet[secondChar]
 
             local talentInfo = talentMap[decodedId]
             -- if (not talentInfo) then
