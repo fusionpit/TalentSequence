@@ -1383,7 +1383,7 @@ end
 
 ts.BoboTalents = {}
 function ts.BoboTalents.GetTalents(talentString)
-    local _, endIndex = strfind(talentString, "talents=")
+    local _, endIndex = strfind(talentString, "t[alents]?=")
     if (endIndex) then
         talentString = strsub(talentString, endIndex + 1)
     end
