@@ -1,3 +1,7 @@
+* 1.0
+    - Fixed rank text being slightly offset
+    - Support more versions of Bobo-Talent urls
+
 * 0.1-beta
     - Fixed icons of not known talents being desaturated
 
