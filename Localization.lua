@@ -8,7 +8,8 @@ local localeText = {
         IMPORT = "Import",
         IMPORT_DIALOG = "Paste your talent string into the box below",
         OK = "OK",
-        CANCEL = "Cancel"
+        CANCEL = "Cancel",
+        WRONG_CLASS = "Unable to import, you're not a %s!"
     }
 };
 

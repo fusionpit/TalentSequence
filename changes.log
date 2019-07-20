@@ -1,3 +1,6 @@
+* 1.1
+    - Won't try to import if the url is for a different class
+    
 * 1.0
     - Fixed rank text being slightly offset
     - Support more versions of Bobo-Talent urls

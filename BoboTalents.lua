@@ -3,7 +3,9 @@ local _, ts = ...
 local strlen = strlen
 local strsub = strsub
 local strfind = strfind
+local strlower = strlower
 local tinsert = tinsert
+local UnitClass = UnitClass
 
 local talentMap = {
     -- hunter
@@ -1384,7 +1386,18 @@ end
 local charsetComplementSet = "[^"..charset.."]"
 ts.BoboTalents = {}
 function ts.BoboTalents.GetTalents(talentString)
-    local _, endIndex = strfind(talentString, "t[alents]?=")
+    local _, endIndex = strfind(talentString, "c[lass]?=")
+    if (endIndex) then
+        local _, playerClass = UnitClass("player")
+        playerClass = strlower(playerClass)
+        local endOfClass = strfind(talentString, "&", endIndex)
+        local class = strlower(strsub(talentString, endIndex+1, endOfClass-1))
+        if (class ~= playerClass) then
+            print(format(ts.L.WRONG_CLASS, class))
+            return
+        end
+    end
+    _, endIndex = strfind(talentString, "t[alents]?=")
     if (endIndex) then
         talentString = strsub(talentString, endIndex + 1)
         -- check for and strip any additional characters not in charset

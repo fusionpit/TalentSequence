@@ -158,7 +158,9 @@ function ts.Update(frame)
 end
 
 function ts.SetTalents(frame, talentsString)
-    ts.Talents = ts.BoboTalents.GetTalents(talentsString)
+    local talents = ts.BoboTalents.GetTalents(talentsString)
+    if (talents == nil) then return end
+    ts.Talents = talents
     TalentSequenceTalents = ts.Talents
     if (frame:IsShown()) then
         ts.ScrollFirstUnlearnedTalentIntoView(frame)
