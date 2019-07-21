@@ -1,6 +1,6 @@
 ## Interface: 11200
 ## Title: Talent Sequence
-## Version: 1.1v
+## Version: 1.2v
 ## LoadOnDemand: 1
 ## LoadWith: Blizzard_TalentUI
 ## Author: Sveng
