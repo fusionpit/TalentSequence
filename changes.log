@@ -1,3 +1,6 @@
+* 1.2
+    - Fixed an issue where importing a sequence that includes talents you already know would not properly adjust the scroll bar
+
 * 1.1
     - Won't try to import if the url is for a different class
     
