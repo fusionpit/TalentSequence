@@ -163,6 +163,9 @@ function ts.SetTalents(frame, talentsString)
     ts.Talents = talents
     TalentSequenceTalents = ts.Talents
     if (frame:IsShown()) then
+        local scrollBar = frame.scrollBar
+        local numTalents = #ts.Talents
+        FauxScrollFrame_Update(scrollBar, numTalents, MAX_ROWS, ROW_HEIGHT)
         ts.ScrollFirstUnlearnedTalentIntoView(frame)
         ts.Update(frame)
     end
