@@ -22,9 +22,10 @@ local GRAY_FONT_COLOR = GRAY_FONT_COLOR
 
 local ROW_HEIGHT = 38
 local MAX_ROWS = 10
-local SCROLLING_WIDTH = 100
-local NONSCROLLING_WIDTH = 82
+local SCROLLING_WIDTH = 102
+local NONSCROLLING_WIDTH = 84
 local IMPORT_DIALOG = "TALENTSEQUENCEIMPORTDIALOG"
+local LEVEL_WIDTH = 20
 
 IsTalentSequenceExpanded = false
 TalentSequenceTalents = {}
@@ -244,7 +245,7 @@ function ts.CreateFrame()
         row:SetHeight(ROW_HEIGHT)
 
         local level = CreateFrame("Frame", "$parentLevel", row)
-        level:SetWidth(16)
+        level:SetWidth(LEVEL_WIDTH)
         level:SetPoint("LEFT", row, "LEFT")
         level:SetPoint("TOP", row, "TOP")
         level:SetPoint("BOTTOM", row, "BOTTOM")
