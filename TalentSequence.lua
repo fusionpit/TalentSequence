@@ -1,4 +1,4 @@
-local _, ts = ...
+local addonName, ts = ...
 
 local _G = _G
 local GetTalentInfo = GetTalentInfo
@@ -7,6 +7,7 @@ local SetItemButtonTexture = SetItemButtonTexture
 local UnitLevel = UnitLevel
 local LearnTalent = LearnTalent
 local CreateFrame = CreateFrame
+local IsAddOnLoaded = IsAddOnLoaded
 local StaticPopup_Show = StaticPopup_Show
 local FauxScrollFrame_SetOffset = FauxScrollFrame_SetOffset
 local FauxScrollFrame_GetOffset = FauxScrollFrame_GetOffset
@@ -160,7 +161,9 @@ end
 
 function ts.SetTalents(frame, talentsString)
     local talents = ts.BoboTalents.GetTalents(talentsString)
-    if (talents == nil) then return end
+    if (talents == nil) then
+        return
+    end
     ts.Talents = talents
     TalentSequenceTalents = ts.Talents
     if (frame:IsShown()) then
@@ -366,23 +369,44 @@ function ts.CreateFrame()
     ts.MainFrame = mainFrame
 end
 
+local initRun = false
+local function init()
+    if (initRun) then
+        return
+    end
+    if (not TalentSequenceTalents) then
+        TalentSequenceTalents = {}
+    end
+    ts.Talents = TalentSequenceTalents
+    if (IsTalentSequenceExpanded == 0) then
+        IsTalentSequenceExpanded = false
+    end
+    if (ts.MainFrame == nil) then
+        ts.CreateFrame()
+    end
+    initRun = true
+end
+
 local talentSequenceEventFrame = CreateFrame("Frame")
 talentSequenceEventFrame:SetScript(
     "OnEvent",
     function(self, event, ...)
-        if (event == "ADDON_LOADED" and ... == "TalentSequence") then
-            if (not TalentSequenceTalents) then
-                TalentSequenceTalents = {}
-            end
-            ts.Talents = TalentSequenceTalents
-            if (IsTalentSequenceExpanded == 0) then
-                IsTalentSequenceExpanded = false
-            end
-            if (ts.MainFrame == nil) then
-                ts.CreateFrame()
-            end
+        if (event == "ADDON_LOADED" and ... == addonName) then
+            init()
             self:UnregisterEvent("ADDON_LOADED")
+        end
+        if (event == "PLAYER_LOGIN") then
+            init()
+            self:UnregisterEvent("ADDON_LOADED")
+            self:UnregisterEvent("PLAYER_LOGIN")
         end
     end
 )
 talentSequenceEventFrame:RegisterEvent("ADDON_LOADED")
+
+-- Deja Stats loads the talent ui during its own ADDON_LOADED event,
+-- and for some reason that will load this addon but it will not
+-- fire ADDON_LOADED for it
+if (IsAddOnLoaded("DejaClassicStats")) then
+    talentSequenceEventFrame:RegisterEvent("PLAYER_LOGIN")
+end
