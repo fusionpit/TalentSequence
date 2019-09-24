@@ -200,7 +200,7 @@ function ts.CreateFrame()
     mainFrame:SetScript(
         "OnEvent",
         function(self, event)
-            if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and self:IsShown()) then
+            if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and self:IsVisible()) then
                 ts.ScrollFirstUnlearnedTalentIntoView(self)
                 ts.Update(self)
             end
