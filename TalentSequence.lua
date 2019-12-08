@@ -36,28 +36,25 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     hasEditBox = true,
     button1 = ts.L["OK"],
     button2 = ts.L["CANCEL"],
-    OnShow = function(self)
-        _G[self:GetName() .. "EditBox"]:SetText("")
-    end,
+    OnShow = function(self) _G[self:GetName() .. "EditBox"]:SetText("") end,
     OnAccept = function(self)
         local talentsString = self.editBox:GetText()
         ts.SetTalents(ts.MainFrame, talentsString)
     end,
     EditBoxOnEnterPressed = function(self)
-        local talentsString = _G[self:GetParent():GetName() .. "EditBox"]:GetText()
-        ts.SetTalents(ts.MainFrame, talentsString)
+        local talentsString =
+            _G[self:GetParent():GetName() .. "EditBox"]:GetText()
         self:GetParent():Hide()
     end,
-    EditBoxOnEscapePressed = function(self)
-        self:GetParent():Hide()
-    end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3
 }
 
-local tooltip = CreateFrame("GameTooltip", "TalentSequenceTooltip", UIParent, "GameTooltipTemplate")
+local tooltip = CreateFrame("GameTooltip", "TalentSequenceTooltip", UIParent,
+                            "GameTooltipTemplate")
 function ts.SetRowTalent(row, talent)
     if (not talent) then
         row:Hide()
@@ -67,17 +64,21 @@ function ts.SetRowTalent(row, talent)
 
     row:Show()
     row.talent = talent
-    local name, icon, _, _, currentRank, maxRank = GetTalentInfo(talent.tab, talent.index)
+    local name, icon, _, _, currentRank, maxRank =
+        GetTalentInfo(talent.tab, talent.index)
 
     SetItemButtonTexture(row.icon, icon)
     local tabName = GetTalentTabInfo(talent.tab)
-    row.icon.tooltip = format("%s (%d/%d) - %s", name, talent.rank, maxRank, tabName)
+    row.icon.tooltip = format("%s (%d/%d) - %s", name, talent.rank, maxRank,
+                              tabName)
     row.icon.rank:SetText(talent.rank)
 
     if (talent.rank < maxRank) then
-        row.icon.rank:SetTextColor(GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+        row.icon.rank:SetTextColor(GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g,
+                                   GREEN_FONT_COLOR.b)
     else
-        row.icon.rank:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
+        row.icon.rank:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g,
+                                   NORMAL_FONT_COLOR.b)
     end
     if (tooltip:IsOwned(row.icon) and row.icon.tooltip) then
         tooltip:SetText(row.icon.tooltip, nil, nil, nil, nil, true)
@@ -93,14 +94,18 @@ function ts.SetRowTalent(row, talent)
     row.level.label:SetText(talent.level)
     local playerLevel = UnitLevel("player")
     if (talent.level <= playerLevel) then
-        row.level.label:SetTextColor(GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+        row.level.label:SetTextColor(GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g,
+                                     GREEN_FONT_COLOR.b)
     else
-        row.level.label:SetTextColor(RED_FONT_COLOR.r, RED_FONT_COLOR.g, RED_FONT_COLOR.b)
+        row.level.label:SetTextColor(RED_FONT_COLOR.r, RED_FONT_COLOR.g,
+                                     RED_FONT_COLOR.b)
     end
 
     if (talent.rank <= currentRank) then
-        row.level.label:SetTextColor(GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
-        row.icon.rank:SetTextColor(GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
+        row.level.label:SetTextColor(GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g,
+                                     GRAY_FONT_COLOR.b)
+        row.icon.rank:SetTextColor(GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g,
+                                   GRAY_FONT_COLOR.b)
         iconTexture:SetDesaturated(1)
     else
         iconTexture:SetDesaturated(nil)
@@ -110,11 +115,9 @@ end
 function ts.FindFirstUnlearnedIndex()
     for index, talent in pairs(ts.Talents) do
         local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index)
-        if (talent.rank > currentRank) then
-            return index
+        if (talent.rank > currentRank) then return index end
         end
     end
-end
 
 function ts.ScrollFirstUnlearnedTalentIntoView(frame)
     local numTalents = #ts.Talents
@@ -179,66 +182,48 @@ function ts.CreateFrame()
     local mainFrame = CreateFrame("Frame", "TalentOrderFrame", TalentFrame)
     mainFrame:SetPoint("TOPLEFT", "TalentFrame", "TOPRIGHT", -36, -12)
     mainFrame:SetPoint("BOTTOMLEFT", "TalentFrame", "BOTTOMRIGHT", 0, 72)
-    mainFrame:SetBackdrop(
-        {
+    mainFrame:SetBackdrop({
             bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
             edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
             tile = true,
             tileSize = 16,
             edgeSize = 16,
             insets = {left = 4, right = 4, top = 4, bottom = 4}
-        }
-    )
-    mainFrame:SetScript(
-        "OnShow",
-        function(self)
+    })
+    mainFrame:SetScript("OnShow", function(self)
             ts.ScrollFirstUnlearnedTalentIntoView(self)
+    end)
+    mainFrame:SetScript("OnHide", function(self)
+        if (ts.ImportFrame and ts.ImportFrame:IsShown()) then
+            ts.ImportFrame:Hide()
         end
-    )
+    end)
     mainFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
     mainFrame:RegisterEvent("SPELLS_CHANGED")
-    mainFrame:SetScript(
-        "OnEvent",
-        function(self, event)
-            if (((event == "CHARACTER_POINTS_CHANGED") or (event == "SPELLS_CHANGED")) and self:IsVisible()) then
+    mainFrame:SetScript("OnEvent", function(self, event)
+        if (((event == "CHARACTER_POINTS_CHANGED") or
+            (event == "SPELLS_CHANGED")) and self:IsVisible()) then
                 ts.ScrollFirstUnlearnedTalentIntoView(self)
-                ts.Update(self)
-            end
+            ts.UpdateTalentFrame(self)
         end
-    )
+    end)
     mainFrame:Hide()
 
-    hooksecurefunc(
-        "TalentFrameTab_OnClick",
-        function()
-            if (mainFrame:IsShown()) then
-                ts.Update(mainFrame)
-            end
-        end
-    )
+    hooksecurefunc("TalentFrameTab_OnClick", function()
+        if (mainFrame:IsShown()) then ts.UpdateTalentFrame(mainFrame) end
+    end)
 
-    local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar", mainFrame, "FauxScrollFrameTemplate")
+    local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar", mainFrame,
+                                  "FauxScrollFrameTemplate")
     scrollBar:SetPoint("TOPLEFT", 0, -8)
     scrollBar:SetPoint("BOTTOMRIGHT", -30, 8)
-    scrollBar:SetScript(
-        "OnVerticalScroll",
-        function(self, offset)
-            FauxScrollFrame_OnVerticalScroll(
-                self,
-                offset,
-                ROW_HEIGHT,
-                function()
-                    ts.Update(mainFrame)
-                end
-            )
-        end
-    )
-    scrollBar:SetScript(
-        "OnShow",
+    scrollBar:SetScript("OnVerticalScroll", function(self, offset)
+        FauxScrollFrame_OnVerticalScroll(self, offset, TALENT_ROW_HEIGHT,
         function()
-            ts.Update(mainFrame)
-        end
-    )
+            ts.UpdateTalentFrame(mainFrame)
+        end)
+    end)
+    scrollBar:SetScript("OnShow", function() ts.UpdateTalentFrame(mainFrame) end)
     mainFrame.scrollBar = scrollBar
 
     local rows = {}
@@ -253,52 +238,44 @@ function ts.CreateFrame()
         level:SetPoint("TOP", row, "TOP")
         level:SetPoint("BOTTOM", row, "BOTTOM")
 
-        local levelLabel = level:CreateFontString(nil, "OVERLAY", "GameFontWhite")
+        local levelLabel = level:CreateFontString(nil, "OVERLAY",
+                                                  "GameFontWhite")
         levelLabel:SetPoint("TOPLEFT", level, "TOPLEFT")
         levelLabel:SetPoint("BOTTOMRIGHT", level, "BOTTOMRIGHT")
         level.label = levelLabel
 
-        local icon = CreateFrame("Button", "$parentIcon", row, "ItemButtonTemplate")
+        local icon = CreateFrame("Button", "$parentIcon", row,
+                                 "ItemButtonTemplate")
         icon:SetWidth(37)
         icon:SetPoint("LEFT", level, "RIGHT", 4, 0)
         icon:SetPoint("TOP", level, "TOP")
         icon:SetPoint("BOTTOM", level, "BOTTOM")
         icon:EnableMouse(true)
-        icon:SetScript(
-            "OnClick",
-            function(self)
+        icon:SetScript("OnClick", function(self)
                 local talent = self:GetParent().talent
-                local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index)
+            local _, _, _, _, currentRank =
+                GetTalentInfo(talent.tab, talent.index)
                 local playerLevel = UnitLevel("player")
                 if (currentRank + 1 == talent.rank and playerLevel >= talent.level) then
                     LearnTalent(talent.tab, talent.index)
                 end
-            end
-        )
-        icon:SetScript(
-            "OnEnter",
-            function(self)
-                if (not self.tooltip) then
-                    return
-                end
+        end)
+        icon:SetScript("OnEnter", function(self)
+            if (not self.tooltip) then return end
                 tooltip:SetOwner(self, "ANCHOR_RIGHT")
                 tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
                 tooltip:Show()
-            end
-        )
-        icon:SetScript(
-            "OnLeave",
-            function()
-                tooltip:Hide()
-            end
-        )
+        end)
+        icon:SetScript("OnLeave", function() tooltip:Hide() end)
 
         local rankBorderTexture = icon:CreateTexture(nil, "OVERLAY")
         rankBorderTexture:SetWidth(32)
         rankBorderTexture:SetHeight(32)
         rankBorderTexture:SetPoint("CENTER", icon, "BOTTOMRIGHT")
-        rankBorderTexture:SetTexture("Interface\\TalentFrame\\TalentFrame-RankBorder")
-        local rankText = icon:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        rankBorderTexture:SetTexture(
+            "Interface\\TalentFrame\\TalentFrame-RankBorder")
+        local rankText = icon:CreateFontString(nil, "OVERLAY",
+                                               "GameFontNormalSmall")
         rankText:SetPoint("CENTER", rankBorderTexture)
         icon.rank = rankText
 
@@ -328,7 +305,8 @@ function ts.CreateFrame()
         end
     )
 
-    local showButton = CreateFrame("Button", "ShowTalentOrderButton", TalentFrame, "UIPanelButtonTemplate")
+    local showButton = CreateFrame("Button", "ShowTalentOrderButton",
+                                   TalentFrame, "UIPanelButtonTemplate")
     showButton:SetPoint("TOPRIGHT", -62, -18)
     showButton:SetText(">>")
     if (IsTalentSequenceExpanded) then
@@ -336,9 +314,7 @@ function ts.CreateFrame()
         mainFrame:Show()
     end
     showButton.tooltip = ts.L["TOGGLE"]
-    showButton:SetScript(
-        "OnClick",
-        function(self)
+    showButton:SetScript("OnClick", function(self)
             IsTalentSequenceExpanded = not IsTalentSequenceExpanded
             if (IsTalentSequenceExpanded) then
                 mainFrame:Show()
@@ -347,22 +323,13 @@ function ts.CreateFrame()
                 mainFrame:Hide()
                 self:SetText(">>")
             end
-        end
-    )
-    showButton:SetScript(
-        "OnEnter",
-        function(self)
+    end)
+    showButton:SetScript("OnEnter", function(self)
             tooltip:SetOwner(self, "ANCHOR_RIGHT")
             tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
             tooltip:Show()
-        end
-    )
-    showButton:SetScript(
-        "OnLeave",
-        function()
-            tooltip:Hide()
-        end
-    )
+    end)
+    showButton:SetScript("OnLeave", function() tooltip:Hide() end)
     showButton:SetHeight(14)
     showButton:SetWidth(showButton:GetTextWidth() + 10)
 
@@ -388,9 +355,7 @@ local function init()
 end
 
 local talentSequenceEventFrame = CreateFrame("Frame")
-talentSequenceEventFrame:SetScript(
-    "OnEvent",
-    function(self, event, ...)
+talentSequenceEventFrame:SetScript("OnEvent", function(self, event, ...)
         if (event == "ADDON_LOADED" and ... == addonName) then
             init()
             self:UnregisterEvent("ADDON_LOADED")
@@ -400,13 +365,11 @@ talentSequenceEventFrame:SetScript(
             self:UnregisterEvent("ADDON_LOADED")
             self:UnregisterEvent("PLAYER_LOGIN")
         end
-    end
-)
+end)
 talentSequenceEventFrame:RegisterEvent("ADDON_LOADED")
 
 -- Deja Stats loads the talent ui during its own ADDON_LOADED event,
--- and for some reason that will load this addon but it will not
--- fire ADDON_LOADED for it
+-- which will prevent our ADDON_LOADED from being fired correctly
 if (IsAddOnLoaded("DejaClassicStats")) then
     talentSequenceEventFrame:RegisterEvent("PLAYER_LOGIN")
 end
