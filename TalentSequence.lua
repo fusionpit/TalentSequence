@@ -162,25 +162,16 @@ function ts:UpdateSequencesFrame()
     local offset = FauxScrollFrame_GetOffset(frame.scrollBar)
     for i = 1, MAX_SEQUENCE_ROWS do
         local index = i + offset
-        local d = TalentSequenceSavedSequences[index]
         local row = frame.rows[i]
-        if (d == nil) then
-            row:Hide()
-        else
-            row:Show()
-            row.loadButton:SetText(d.name)
-            row.talentAmount:SetText(d.points)
+        row:SetSequence(TalentSequenceSavedSequences[index])
         end
     end
-end
 
 function ts.CreateImportFrame()
     local sequencesFrame = CreateFrame("Frame", "TalentSequences", UIParent,
                                        "BasicFrameTemplateWithInset")
     sequencesFrame:Hide()
-    sequencesFrame:SetScript("OnShow", function()
-        ts:UpdateSequencesFrame()
-    end)
+    sequencesFrame:SetScript("OnShow", function() ts:UpdateSequencesFrame() end)
     sequencesFrame:SetSize(325, 212)
     sequencesFrame:SetPoint("CENTER")
     sequencesFrame:SetMovable(true)
@@ -189,9 +180,7 @@ function ts.CreateImportFrame()
     sequencesFrame:SetScript("OnMouseUp", sequencesFrame.StopMovingOrSizing)
     sequencesFrame.TitleText:SetText("Talent Sequences")
     function sequencesFrame:ShowAllLoadButtons()
-        for _, row in ipairs(self.rows) do
-            row:SetForLoad()
-        end
+        for _, row in ipairs(self.rows) do row:SetForLoad() end
     end
     tinsert(UISpecialFrames, "TalentSequences")
     local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar",
@@ -226,20 +215,26 @@ function ts.CreateImportFrame()
         nameInput:SetPoint("LEFT")
         nameInput:SetWidth(150)
         nameInput:SetAutoFocus(false)
-        row.nameInput = nameInput
 
         local namedLoadButton = CreateFrame("Button", nil, row,
                                             "UIPanelButtonTemplate")
         namedLoadButton:SetPoint("TOPLEFT", nameInput, "TOPLEFT", -6, 0)
         namedLoadButton:SetPoint("BOTTOMRIGHT", nameInput, "BOTTOMRIGHT")
         nameInput:Hide()
-        row.loadButton = namedLoadButton
 
         local talentAmountString = row:CreateFontString(nil, "ARTWORK",
                                                         "GameFontWhite")
         talentAmountString:SetPoint("LEFT", nameInput, "RIGHT")
 
-        row.talentAmount = talentAmountString
+        function row:SetSequence(sequence)
+            if (sequence == nil) then
+                self:Hide()
+            else
+                self:Show()
+                namedLoadButton:SetText(sequence.name)
+                talentAmountString:SetText(sequence.points)
+            end
+        end
 
         local deleteFrame = CreateFrame("Button", nil, row)
         deleteFrame:EnableMouse(true)
