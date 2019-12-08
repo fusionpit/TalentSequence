@@ -21,8 +21,10 @@ local NORMAL_FONT_COLOR = NORMAL_FONT_COLOR
 local RED_FONT_COLOR = RED_FONT_COLOR
 local GRAY_FONT_COLOR = GRAY_FONT_COLOR
 
-local ROW_HEIGHT = 38
-local MAX_ROWS = 10
+local TALENT_ROW_HEIGHT = 38
+local MAX_TALENT_ROWS = 10
+local SEQUENCES_ROW_HEIGHT = 26
+local MAX_SEQUENCE_ROWS = 5
 local SCROLLING_WIDTH = 102
 local NONSCROLLING_WIDTH = 84
 local IMPORT_DIALOG = "TALENTSEQUENCEIMPORTDIALOG"
@@ -39,11 +41,12 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     OnShow = function(self) _G[self:GetName() .. "EditBox"]:SetText("") end,
     OnAccept = function(self)
         local talentsString = self.editBox:GetText()
-        ts.SetTalents(ts.MainFrame, talentsString)
+        ts:ImportTalents(talentsString)
     end,
     EditBoxOnEnterPressed = function(self)
         local talentsString =
             _G[self:GetParent():GetName() .. "EditBox"]:GetText()
+        ts:ImportTalents(talentsString)
         self:GetParent():Hide()
     end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
@@ -116,82 +119,318 @@ function ts.FindFirstUnlearnedIndex()
     for index, talent in pairs(ts.Talents) do
         local _, _, _, _, currentRank = GetTalentInfo(talent.tab, talent.index)
         if (talent.rank > currentRank) then return index end
-        end
     end
+end
 
 function ts.ScrollFirstUnlearnedTalentIntoView(frame)
+    local scrollBar = frame.scrollBar
+
     local numTalents = #ts.Talents
-    if (numTalents <= MAX_ROWS) then
+    if (numTalents <= MAX_TALENT_ROWS) then
+        FauxScrollFrame_SetOffset(scrollBar, 0)
+        FauxScrollFrame_OnVerticalScroll(scrollBar, 0, TALENT_ROW_HEIGHT)
         return
     end
 
-    local scrollBar = frame.scrollBar
-
     local nextTalentIndex = ts.FindFirstUnlearnedIndex()
     if (not nextTalentIndex) then
+        FauxScrollFrame_SetOffset(scrollBar, 0)
+        FauxScrollFrame_OnVerticalScroll(scrollBar, 0, TALENT_ROW_HEIGHT)
         return
     end
     if (nextTalentIndex == 1) then
         FauxScrollFrame_SetOffset(scrollBar, 0)
-        FauxScrollFrame_OnVerticalScroll(scrollBar, 0, ROW_HEIGHT)
+        FauxScrollFrame_OnVerticalScroll(scrollBar, 0, TALENT_ROW_HEIGHT)
         return
     end
     local nextTalentOffset = nextTalentIndex - 1
-    if (nextTalentOffset > numTalents - MAX_ROWS) then
-        nextTalentOffset = numTalents - MAX_ROWS
+    if (nextTalentOffset > numTalents - MAX_TALENT_ROWS) then
+        nextTalentOffset = numTalents - MAX_TALENT_ROWS
     end
     FauxScrollFrame_SetOffset(scrollBar, nextTalentOffset)
-    FauxScrollFrame_OnVerticalScroll(scrollBar, ceil(nextTalentOffset * ROW_HEIGHT - 0.5), ROW_HEIGHT)
+    FauxScrollFrame_OnVerticalScroll(scrollBar, ceil(
+                                         nextTalentOffset * TALENT_ROW_HEIGHT -
+                                             0.5), TALENT_ROW_HEIGHT)
 end
 
-function ts.Update(frame)
+function ts.UpdateTalentFrame(frame)
     local scrollBar = frame.scrollBar
     local numTalents = #ts.Talents
-    FauxScrollFrame_Update(scrollBar, numTalents, MAX_ROWS, ROW_HEIGHT)
+    FauxScrollFrame_Update(scrollBar, numTalents, MAX_TALENT_ROWS,
+                           TALENT_ROW_HEIGHT)
     local offset = FauxScrollFrame_GetOffset(scrollBar)
-    for i = 1, MAX_ROWS do
+    for i = 1, MAX_TALENT_ROWS do
         local talentIndex = i + offset
         local talent = ts.Talents[talentIndex]
         local row = frame.rows[i]
         ts.SetRowTalent(row, talent)
     end
-    if (numTalents <= MAX_ROWS) then
+    if (numTalents <= MAX_TALENT_ROWS) then
         frame:SetWidth(NONSCROLLING_WIDTH)
     else
         frame:SetWidth(SCROLLING_WIDTH)
     end
 end
 
-function ts.SetTalents(frame, talentsString)
-    local talents = ts.BoboTalents.GetTalents(talentsString)
-    if (talents == nil) then
-        return
+local function InsertSequence(talentSequence)
+    local tabTotals = {0, 0, 0}
+    for _, talent in ipairs(talentSequence) do
+        tabTotals[talent.tab] = tabTotals[talent.tab] + 1
     end
-    ts.Talents = talents
-    TalentSequenceTalents = ts.Talents
-    if (frame:IsShown()) then
-        local scrollBar = frame.scrollBar
-        local numTalents = #ts.Talents
-        FauxScrollFrame_Update(scrollBar, numTalents, MAX_ROWS, ROW_HEIGHT)
-        ts.ScrollFirstUnlearnedTalentIntoView(frame)
-        ts.Update(frame)
+    local points = string.format("%d/%d/%d", unpack(tabTotals))
+    tinsert(TalentSequenceSavedSequences, 1,
+            {name = "<unnamed>", talents = talentSequence, points = points})
+end
+
+function ts:ImportTalents(talentsString)
+    local talents = ts.BoboTalents.GetTalents(talentsString)
+    if (talents == nil) then return end
+    InsertSequence(talents)
+    if (self.ImportFrame and self.ImportFrame:IsShown()) then
+        local scrollBar = self.ImportFrame.scrollBar
+        FauxScrollFrame_SetOffset(scrollBar, 0)
+        FauxScrollFrame_OnVerticalScroll(scrollBar, 0, SEQUENCES_ROW_HEIGHT)
+        ts:UpdateSequencesFrame()
+        ts.ImportFrame.rows[1]:SetForRename()
     end
 end
 
-function ts.CreateFrame()
+function ts:SetTalents(talents)
+    if (talents == nil) then return end
+    ts.Talents = talents
+    TalentSequenceTalents = ts.Talents
+    if (self.MainFrame and self.MainFrame:IsShown()) then
+        local scrollBar = self.MainFrame.scrollBar
+        local numTalents = #ts.Talents
+        FauxScrollFrame_Update(scrollBar, numTalents, MAX_TALENT_ROWS,
+                               TALENT_ROW_HEIGHT)
+        ts.ScrollFirstUnlearnedTalentIntoView(self.MainFrame)
+        ts.UpdateTalentFrame(self.MainFrame)
+    end
+end
+
+function ts:UpdateSequencesFrame()
+    local frame = self.ImportFrame
+    frame:ShowAllLoadButtons()
+    FauxScrollFrame_Update(frame.scrollBar, #TalentSequenceSavedSequences,
+                           MAX_SEQUENCE_ROWS, SEQUENCES_ROW_HEIGHT, nil, nil,
+                           nil, nil, nil, nil, true)
+    local offset = FauxScrollFrame_GetOffset(frame.scrollBar)
+    for i = 1, MAX_SEQUENCE_ROWS do
+        local index = i + offset
+        local d = TalentSequenceSavedSequences[index]
+        local row = frame.rows[i]
+        if (d == nil) then
+            row:Hide()
+        else
+            row:Show()
+            row.loadButton:SetText(d.name)
+            row.talentAmount:SetText(d.points)
+        end
+    end
+end
+
+function ts.CreateImportFrame()
+    local sequencesFrame = CreateFrame("Frame", "TalentSequences", UIParent,
+                                       "BasicFrameTemplateWithInset")
+    sequencesFrame:Hide()
+    sequencesFrame:SetScript("OnShow", function()
+        ts:UpdateSequencesFrame()
+    end)
+    sequencesFrame:SetSize(325, 212)
+    sequencesFrame:SetPoint("CENTER")
+    sequencesFrame:SetMovable(true)
+    sequencesFrame:SetClampedToScreen(true)
+    sequencesFrame:SetScript("OnMouseDown", sequencesFrame.StartMoving)
+    sequencesFrame:SetScript("OnMouseUp", sequencesFrame.StopMovingOrSizing)
+    sequencesFrame.TitleText:SetText("Talent Sequences")
+    function sequencesFrame:ShowAllLoadButtons()
+        for _, row in ipairs(self.rows) do
+            row:SetForLoad()
+        end
+    end
+    tinsert(UISpecialFrames, "TalentSequences")
+    local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar",
+                                  sequencesFrame, "FauxScrollFrameTemplate")
+    scrollBar:SetPoint("TOPLEFT", sequencesFrame.InsetBg, "TOPLEFT", 5, -6)
+    scrollBar:SetPoint("BOTTOMRIGHT", sequencesFrame.InsetBg, "BOTTOMRIGHT",
+                       -28, 28)
+
+    sequencesFrame.scrollBar = scrollBar
+
+    local importButton = CreateFrame("Button", nil, sequencesFrame,
+                                     "UIPanelButtonTemplate")
+    importButton:SetPoint("BOTTOM", 0, 8)
+    importButton:SetSize(75, 24)
+    importButton:SetText("Import")
+    importButton:SetNormalFontObject("GameFontNormal")
+    importButton:SetHighlightFontObject("GameFontHighlight")
+    importButton:SetScript("OnClick",
+                           function() StaticPopup_Show(IMPORT_DIALOG) end)
+
+    local rows = {}
+    for i = 1, MAX_SEQUENCE_ROWS do
+        local row = CreateFrame("Frame", "$parentRow" .. i, sequencesFrame)
+        row.index = i
+        row:SetPoint("RIGHT", scrollBar)
+        row:SetPoint("LEFT", scrollBar)
+        row:SetHeight(SEQUENCES_ROW_HEIGHT)
+
+        local nameInput = CreateFrame("EditBox", nil, row, "InputBoxTemplate")
+        nameInput:SetPoint("TOP")
+        nameInput:SetPoint("BOTTOM")
+        nameInput:SetPoint("LEFT")
+        nameInput:SetWidth(150)
+        nameInput:SetAutoFocus(false)
+        row.nameInput = nameInput
+
+        local namedLoadButton = CreateFrame("Button", nil, row,
+                                            "UIPanelButtonTemplate")
+        namedLoadButton:SetPoint("TOPLEFT", nameInput, "TOPLEFT", -6, 0)
+        namedLoadButton:SetPoint("BOTTOMRIGHT", nameInput, "BOTTOMRIGHT")
+        nameInput:Hide()
+        row.loadButton = namedLoadButton
+
+        local talentAmountString = row:CreateFontString(nil, "ARTWORK",
+                                                        "GameFontWhite")
+        talentAmountString:SetPoint("LEFT", nameInput, "RIGHT")
+
+        row.talentAmount = talentAmountString
+
+        local deleteFrame = CreateFrame("Button", nil, row)
+        deleteFrame:EnableMouse(true)
+        deleteFrame:SetPoint("RIGHT")
+        deleteFrame:SetPoint("TOP")
+        deleteFrame:SetPoint("BOTTOM")
+        deleteFrame:SetWidth(SEQUENCES_ROW_HEIGHT)
+
+        local delete = row:CreateTexture(nil, "ARTWORK")
+        delete:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+        delete:SetAllPoints(deleteFrame)
+        delete:SetVertexColor(1, 1, 1, 0.5)
+
+        local renameFrame = CreateFrame("Button", nil, row)
+        renameFrame:EnableMouse(true)
+        renameFrame:SetPoint("TOP")
+        renameFrame:SetPoint("BOTTOM")
+        renameFrame:SetPoint("RIGHT", delete, "LEFT")
+        renameFrame:SetWidth(SEQUENCES_ROW_HEIGHT)
+
+        talentAmountString:SetPoint("RIGHT", renameFrame, "LEFT")
+
+        local rename = row:CreateTexture(nil, "ARTWORK")
+        rename:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+        rename:SetAllPoints(renameFrame)
+        rename:SetVertexColor(1, 1, 1, 0.5)
+
+        nameInput:SetScript("OnEscapePressed", function(self)
+            self:ClearFocus()
+            namedLoadButton:Show()
+            self:Hide()
+        end)
+        nameInput:SetScript("OnEnterPressed", function(self)
+            local offset = FauxScrollFrame_GetOffset(scrollBar)
+            local index = offset + self:GetParent().index
+            local inputText = self:GetText()
+            inputText = (inputText and inputText ~= "") and inputText or
+                            "<unnamed>"
+            TalentSequenceSavedSequences[index].name = inputText
+            namedLoadButton:Show()
+            self:Hide()
+            ts:UpdateSequencesFrame()
+        end)
+        namedLoadButton:SetScript("OnEnter", function(self)
+            tooltip:SetOwner(self, "ANCHOR_RIGHT")
+            tooltip:SetText("Click to Load Sequence")
+            tooltip:Show()
+        end)
+        namedLoadButton:SetScript("OnLeave", function() tooltip:Hide() end)
+        namedLoadButton:SetScript("OnClick", function(self)
+            local offset = FauxScrollFrame_GetOffset(scrollBar)
+            local index = offset + self:GetParent().index
+            local sequence = TalentSequenceSavedSequences[index]
+            ts:SetTalents(sequence.talents)
+        end)
+        deleteFrame:SetScript("OnEnter", function(self)
+            delete:SetVertexColor(1, 1, 1, 1)
+            tooltip:SetOwner(self, "ANCHOR_RIGHT")
+            tooltip:SetText("<Shift>Click to Delete")
+            tooltip:Show()
+        end)
+        deleteFrame:SetScript("OnLeave", function()
+            delete:SetVertexColor(1, 1, 1, 0.5)
+            tooltip:Hide()
+        end)
+        renameFrame:SetScript("OnEnter", function(self)
+            rename:SetVertexColor(1, 1, 1, 1)
+            tooltip:SetOwner(self, "ANCHOR_RIGHT")
+            tooltip:SetText("Click to Rename")
+            tooltip:Show()
+        end)
+        renameFrame:SetScript("OnLeave", function()
+            rename:SetVertexColor(1, 1, 1, 0.5)
+            tooltip:Hide()
+        end)
+        deleteFrame:SetScript("OnClick", function(self)
+            if (not IsShiftKeyDown()) then return end
+            local offset = FauxScrollFrame_GetOffset(scrollBar)
+            local index = offset + self:GetParent().index
+            tremove(TalentSequenceSavedSequences, index)
+            ts:UpdateSequencesFrame()
+        end)
+        renameFrame:SetScript("OnClick", function(self)
+            self:GetParent():SetForRename()
+        end)
+
+        function row:SetForRename()
+            local offset = FauxScrollFrame_GetOffset(scrollBar)
+            local index = offset + self.index
+            nameInput:SetText(TalentSequenceSavedSequences[index].name)
+            namedLoadButton:Hide()
+            nameInput:Show()
+            nameInput:SetFocus()
+            nameInput:HighlightText()
+        end
+        function row:SetForLoad()
+            nameInput:ClearFocus()
+            nameInput:Hide()
+            namedLoadButton:Show()
+        end
+
+        if (rows[i - 1] == nil) then
+            row:SetPoint("TOPLEFT", scrollBar, 5, -6)
+        else
+            row:SetPoint("TOPLEFT", rows[i - 1], "BOTTOMLEFT", 0, -2)
+        end
+        rawset(rows, i, row)
+    end
+    sequencesFrame.rows = rows
+
+    scrollBar:SetScript("OnVerticalScroll", function(self, offset)
+        FauxScrollFrame_OnVerticalScroll(self, offset, SEQUENCES_ROW_HEIGHT,
+                                         function()
+            ts:UpdateSequencesFrame()
+        end)
+    end)
+    scrollBar:SetScript("OnShow", function() ts:UpdateSequencesFrame() end)
+
+    ts.ImportFrame = sequencesFrame
+end
+
+function ts.CreateMainFrame()
     local mainFrame = CreateFrame("Frame", "TalentOrderFrame", TalentFrame)
     mainFrame:SetPoint("TOPLEFT", "TalentFrame", "TOPRIGHT", -36, -12)
     mainFrame:SetPoint("BOTTOMLEFT", "TalentFrame", "BOTTOMRIGHT", 0, 72)
     mainFrame:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-            tile = true,
-            tileSize = 16,
-            edgeSize = 16,
-            insets = {left = 4, right = 4, top = 4, bottom = 4}
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true,
+        tileSize = 16,
+        edgeSize = 16,
+        insets = {left = 4, right = 4, top = 4, bottom = 4}
     })
     mainFrame:SetScript("OnShow", function(self)
-            ts.ScrollFirstUnlearnedTalentIntoView(self)
+        ts.ScrollFirstUnlearnedTalentIntoView(self)
     end)
     mainFrame:SetScript("OnHide", function(self)
         if (ts.ImportFrame and ts.ImportFrame:IsShown()) then
@@ -203,7 +442,7 @@ function ts.CreateFrame()
     mainFrame:SetScript("OnEvent", function(self, event)
         if (((event == "CHARACTER_POINTS_CHANGED") or
             (event == "SPELLS_CHANGED")) and self:IsVisible()) then
-                ts.ScrollFirstUnlearnedTalentIntoView(self)
+            ts.ScrollFirstUnlearnedTalentIntoView(self)
             ts.UpdateTalentFrame(self)
         end
     end)
@@ -219,7 +458,7 @@ function ts.CreateFrame()
     scrollBar:SetPoint("BOTTOMRIGHT", -30, 8)
     scrollBar:SetScript("OnVerticalScroll", function(self, offset)
         FauxScrollFrame_OnVerticalScroll(self, offset, TALENT_ROW_HEIGHT,
-        function()
+                                         function()
             ts.UpdateTalentFrame(mainFrame)
         end)
     end)
@@ -227,10 +466,10 @@ function ts.CreateFrame()
     mainFrame.scrollBar = scrollBar
 
     local rows = {}
-    for i = 1, MAX_ROWS do
+    for i = 1, MAX_TALENT_ROWS do
         local row = CreateFrame("Frame", "$parentRow" .. i, mainFrame)
         row:SetWidth(110)
-        row:SetHeight(ROW_HEIGHT)
+        row:SetHeight(TALENT_ROW_HEIGHT)
 
         local level = CreateFrame("Frame", "$parentLevel", row)
         level:SetWidth(LEVEL_WIDTH)
@@ -252,19 +491,19 @@ function ts.CreateFrame()
         icon:SetPoint("BOTTOM", level, "BOTTOM")
         icon:EnableMouse(true)
         icon:SetScript("OnClick", function(self)
-                local talent = self:GetParent().talent
+            local talent = self:GetParent().talent
             local _, _, _, _, currentRank =
                 GetTalentInfo(talent.tab, talent.index)
-                local playerLevel = UnitLevel("player")
-                if (currentRank + 1 == talent.rank and playerLevel >= talent.level) then
-                    LearnTalent(talent.tab, talent.index)
-                end
+            local playerLevel = UnitLevel("player")
+            if (currentRank + 1 == talent.rank and playerLevel >= talent.level) then
+                LearnTalent(talent.tab, talent.index)
+            end
         end)
         icon:SetScript("OnEnter", function(self)
             if (not self.tooltip) then return end
-                tooltip:SetOwner(self, "ANCHOR_RIGHT")
-                tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
-                tooltip:Show()
+            tooltip:SetOwner(self, "ANCHOR_RIGHT")
+            tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
+            tooltip:Show()
         end)
         icon:SetScript("OnLeave", function() tooltip:Hide() end)
 
@@ -292,18 +531,17 @@ function ts.CreateFrame()
     end
     mainFrame.rows = rows
 
-    local importButton = CreateFrame("Button", "$parentImportButton", mainFrame, "UIPanelButtonTemplate")
-    importButton:SetPoint("TOP", mainFrame, "BOTTOM", 0, 4)
-    importButton:SetPoint("RIGHT", mainFrame)
-    importButton:SetPoint("LEFT", mainFrame)
-    importButton:SetText(ts.L["IMPORT"])
-    importButton:SetHeight(22)
-    importButton:SetScript(
-        "OnClick",
-        function()
-            StaticPopup_Show(IMPORT_DIALOG)
-        end
-    )
+    local loadButton = CreateFrame("Button", "$parentloadButton", mainFrame,
+                                   "UIPanelButtonTemplate")
+    loadButton:SetPoint("TOP", mainFrame, "BOTTOM", 0, 4)
+    loadButton:SetPoint("RIGHT", mainFrame)
+    loadButton:SetPoint("LEFT", mainFrame)
+    loadButton:SetText(ts.L["LOAD"])
+    loadButton:SetHeight(22)
+    loadButton:SetScript("OnClick", function()
+        if (ts.ImportFrame == nil) then ts.CreateImportFrame() end
+        ts.ImportFrame:Show()
+    end)
 
     local showButton = CreateFrame("Button", "ShowTalentOrderButton",
                                    TalentFrame, "UIPanelButtonTemplate")
@@ -315,19 +553,19 @@ function ts.CreateFrame()
     end
     showButton.tooltip = ts.L["TOGGLE"]
     showButton:SetScript("OnClick", function(self)
-            IsTalentSequenceExpanded = not IsTalentSequenceExpanded
-            if (IsTalentSequenceExpanded) then
-                mainFrame:Show()
-                self:SetText("<<")
-            else
-                mainFrame:Hide()
-                self:SetText(">>")
-            end
+        IsTalentSequenceExpanded = not IsTalentSequenceExpanded
+        if (IsTalentSequenceExpanded) then
+            mainFrame:Show()
+            self:SetText("<<")
+        else
+            mainFrame:Hide()
+            self:SetText(">>")
+        end
     end)
     showButton:SetScript("OnEnter", function(self)
-            tooltip:SetOwner(self, "ANCHOR_RIGHT")
-            tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
-            tooltip:Show()
+        tooltip:SetOwner(self, "ANCHOR_RIGHT")
+        tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
+        tooltip:Show()
     end)
     showButton:SetScript("OnLeave", function() tooltip:Hide() end)
     showButton:SetHeight(14)
@@ -338,33 +576,31 @@ end
 
 local initRun = false
 local function init()
-    if (initRun) then
-        return
+    if (initRun) then return end
+    if (not TalentSequenceTalents) then TalentSequenceTalents = {} end
+    if (not TalentSequenceSavedSequences) then
+        TalentSequenceSavedSequences = {}
     end
-    if (not TalentSequenceTalents) then
-        TalentSequenceTalents = {}
+    if (#TalentSequenceTalents > 0 and #TalentSequenceSavedSequences == 0) then
+        InsertSequence(TalentSequenceTalents)
     end
     ts.Talents = TalentSequenceTalents
-    if (IsTalentSequenceExpanded == 0) then
-        IsTalentSequenceExpanded = false
-    end
-    if (ts.MainFrame == nil) then
-        ts.CreateFrame()
-    end
+    if (IsTalentSequenceExpanded == 0) then IsTalentSequenceExpanded = false end
+    if (ts.MainFrame == nil) then ts.CreateMainFrame() end
     initRun = true
 end
 
 local talentSequenceEventFrame = CreateFrame("Frame")
 talentSequenceEventFrame:SetScript("OnEvent", function(self, event, ...)
-        if (event == "ADDON_LOADED" and ... == addonName) then
-            init()
-            self:UnregisterEvent("ADDON_LOADED")
-        end
-        if (event == "PLAYER_LOGIN") then
-            init()
-            self:UnregisterEvent("ADDON_LOADED")
-            self:UnregisterEvent("PLAYER_LOGIN")
-        end
+    if (event == "ADDON_LOADED" and ... == addonName) then
+        init()
+        self:UnregisterEvent("ADDON_LOADED")
+    end
+    if (event == "PLAYER_LOGIN") then
+        init()
+        self:UnregisterEvent("ADDON_LOADED")
+        self:UnregisterEvent("PLAYER_LOGIN")
+    end
 end)
 talentSequenceEventFrame:RegisterEvent("ADDON_LOADED")
 

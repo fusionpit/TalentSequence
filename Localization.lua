@@ -5,6 +5,7 @@ local GetLocale = GetLocale
 local localeText = {
     enUS = {
         TOGGLE = "Toggle Talent Sequence Window",
+        LOAD = "Load",
         IMPORT = "Import",
         IMPORT_DIALOG = "Paste your talent string into the box below",
         OK = "OK",

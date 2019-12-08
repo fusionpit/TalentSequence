@@ -5,6 +5,7 @@
 ## LoadOnDemand: 1
 ## LoadWith: Blizzard_TalentUI
 ## Notes: Shows what order you should spend talent points in, based on bobo-talents.com
+## SavedVariablesPerCharacter: IsTalentSequenceExpanded, TalentSequenceTalents, TalentSequenceSavedSequences
 ## X-Testers: /u/mrdarkey and /u/lentus
 ## X-Curse-Project-ID: 324447
 ## X-WoWI-ID: 25021
