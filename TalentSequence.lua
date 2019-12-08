@@ -58,62 +58,6 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
 
 local tooltip = CreateFrame("GameTooltip", "TalentSequenceTooltip", UIParent,
                             "GameTooltipTemplate")
-function ts.SetRowTalent(row, talent)
-    if (not talent) then
-        row:Hide()
-        row.talent = nil
-        return
-    end
-
-    row:Show()
-    row.talent = talent
-    local name, icon, _, _, currentRank, maxRank =
-        GetTalentInfo(talent.tab, talent.index)
-
-    SetItemButtonTexture(row.icon, icon)
-    local tabName = GetTalentTabInfo(talent.tab)
-    row.icon.tooltip = format("%s (%d/%d) - %s", name, talent.rank, maxRank,
-                              tabName)
-    row.icon.rank:SetText(talent.rank)
-
-    if (talent.rank < maxRank) then
-        row.icon.rank:SetTextColor(GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g,
-                                   GREEN_FONT_COLOR.b)
-    else
-        row.icon.rank:SetTextColor(NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g,
-                                   NORMAL_FONT_COLOR.b)
-    end
-    if (tooltip:IsOwned(row.icon) and row.icon.tooltip) then
-        tooltip:SetText(row.icon.tooltip, nil, nil, nil, nil, true)
-    end
-
-    local iconTexture = _G[row.icon:GetName() .. "IconTexture"]
-    if (talent.tab ~= TalentFrame.selectedTab) then
-        iconTexture:SetVertexColor(1.0, 1.0, 1.0, 0.25)
-    else
-        iconTexture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
-    end
-
-    row.level.label:SetText(talent.level)
-    local playerLevel = UnitLevel("player")
-    if (talent.level <= playerLevel) then
-        row.level.label:SetTextColor(GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g,
-                                     GREEN_FONT_COLOR.b)
-    else
-        row.level.label:SetTextColor(RED_FONT_COLOR.r, RED_FONT_COLOR.g,
-                                     RED_FONT_COLOR.b)
-    end
-
-    if (talent.rank <= currentRank) then
-        row.level.label:SetTextColor(GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g,
-                                     GRAY_FONT_COLOR.b)
-        row.icon.rank:SetTextColor(GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g,
-                                   GRAY_FONT_COLOR.b)
-        iconTexture:SetDesaturated(1)
-    else
-        iconTexture:SetDesaturated(nil)
-    end
-end
 
 function ts.FindFirstUnlearnedIndex()
     for index, talent in pairs(ts.Talents) do
@@ -163,7 +107,7 @@ function ts.UpdateTalentFrame(frame)
         local talentIndex = i + offset
         local talent = ts.Talents[talentIndex]
         local row = frame.rows[i]
-        ts.SetRowTalent(row, talent)
+        row:SetTalent(talent)
     end
     if (numTalents <= MAX_TALENT_ROWS) then
         frame:SetWidth(NONSCROLLING_WIDTH)
@@ -525,6 +469,67 @@ function ts.CreateMainFrame()
             row:SetPoint("TOPLEFT", mainFrame, 8, -8)
         else
             row:SetPoint("TOPLEFT", rows[i - 1], "BOTTOMLEFT", 0, -2)
+        end
+
+        function row:SetTalent(talent)
+            if (not talent) then
+                self:Hide()
+                self.talent = nil
+                return
+            end
+
+            self:Show()
+            self.talent = talent
+            local name, icon, _, _, currentRank, maxRank =
+                GetTalentInfo(talent.tab, talent.index)
+
+            SetItemButtonTexture(self.icon, icon)
+            local tabName = GetTalentTabInfo(talent.tab)
+            self.icon.tooltip = format("%s (%d/%d) - %s", name, talent.rank,
+                                       maxRank, tabName)
+            self.icon.rank:SetText(talent.rank)
+
+            if (talent.rank < maxRank) then
+                self.icon.rank:SetTextColor(GREEN_FONT_COLOR.r,
+                                            GREEN_FONT_COLOR.g,
+                                            GREEN_FONT_COLOR.b)
+            else
+                self.icon.rank:SetTextColor(NORMAL_FONT_COLOR.r,
+                                            NORMAL_FONT_COLOR.g,
+                                            NORMAL_FONT_COLOR.b)
+            end
+            if (tooltip:IsOwned(self.icon) and self.icon.tooltip) then
+                tooltip:SetText(self.icon.tooltip, nil, nil, nil, nil, true)
+            end
+
+            local iconTexture = _G[self.icon:GetName() .. "IconTexture"]
+            if (talent.tab ~= TalentFrame.selectedTab) then
+                iconTexture:SetVertexColor(1.0, 1.0, 1.0, 0.25)
+            else
+                iconTexture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
+            end
+
+            self.level.label:SetText(talent.level)
+            local playerLevel = UnitLevel("player")
+            if (talent.level <= playerLevel) then
+                self.level.label:SetTextColor(GREEN_FONT_COLOR.r,
+                                              GREEN_FONT_COLOR.g,
+                                              GREEN_FONT_COLOR.b)
+            else
+                self.level.label:SetTextColor(RED_FONT_COLOR.r,
+                                              RED_FONT_COLOR.g, RED_FONT_COLOR.b)
+            end
+
+            if (talent.rank <= currentRank) then
+                self.level.label:SetTextColor(GRAY_FONT_COLOR.r,
+                                              GRAY_FONT_COLOR.g,
+                                              GRAY_FONT_COLOR.b)
+                self.icon.rank:SetTextColor(GRAY_FONT_COLOR.r,
+                                            GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
+                iconTexture:SetDesaturated(1)
+            else
+                iconTexture:SetDesaturated(nil)
+            end
         end
 
         rawset(rows, i, row)
