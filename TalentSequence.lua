@@ -34,10 +34,10 @@ IsTalentSequenceExpanded = false
 TalentSequenceTalents = {}
 
 StaticPopupDialogs[IMPORT_DIALOG] = {
-    text = ts.L["IMPORT_DIALOG"],
+    text = ts.L.IMPORT_DIALOG,
     hasEditBox = true,
-    button1 = ts.L["OK"],
-    button2 = ts.L["CANCEL"],
+    button1 = ts.L.OK,
+    button2 = ts.L.CANCEL,
     OnShow = function(self) _G[self:GetName() .. "EditBox"]:SetText("") end,
     OnAccept = function(self)
         local talentsString = self.editBox:GetText()
@@ -236,51 +236,51 @@ function ts.CreateImportFrame()
             end
         end
 
-        local deleteFrame = CreateFrame("Button", nil, row)
-        deleteFrame:EnableMouse(true)
-        deleteFrame:SetPoint("RIGHT")
-        deleteFrame:SetPoint("TOP")
-        deleteFrame:SetPoint("BOTTOM")
-        deleteFrame:SetWidth(SEQUENCES_ROW_HEIGHT)
+        local deleteButton = CreateFrame("Button", nil, row)
+        deleteButton:EnableMouse(true)
+        deleteButton:SetPoint("RIGHT")
+        deleteButton:SetPoint("TOP")
+        deleteButton:SetPoint("BOTTOM")
+        deleteButton:SetWidth(SEQUENCES_ROW_HEIGHT)
 
         local delete = row:CreateTexture(nil, "ARTWORK")
         delete:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-        delete:SetAllPoints(deleteFrame)
+        delete:SetAllPoints(deleteButton)
         delete:SetVertexColor(1, 1, 1, 0.5)
 
-        local renameFrame = CreateFrame("Button", nil, row)
-        renameFrame:EnableMouse(true)
-        renameFrame:SetPoint("TOP")
-        renameFrame:SetPoint("BOTTOM")
-        renameFrame:SetPoint("RIGHT", delete, "LEFT")
-        renameFrame:SetWidth(SEQUENCES_ROW_HEIGHT)
+        local renameButton = CreateFrame("Button", nil, row)
+        renameButton:EnableMouse(true)
+        renameButton:SetPoint("TOP")
+        renameButton:SetPoint("BOTTOM")
+        renameButton:SetPoint("RIGHT", delete, "LEFT")
+        renameButton:SetWidth(SEQUENCES_ROW_HEIGHT)
 
-        talentAmountString:SetPoint("RIGHT", renameFrame, "LEFT")
+        talentAmountString:SetPoint("RIGHT", renameButton, "LEFT")
 
         local rename = row:CreateTexture(nil, "ARTWORK")
         rename:SetTexture("Interface\\Buttons\\UI-OptionsButton")
-        rename:SetAllPoints(renameFrame)
+        rename:SetAllPoints(renameButton)
         rename:SetVertexColor(1, 1, 1, 0.5)
 
         nameInput:SetScript("OnEscapePressed", function(self)
             self:ClearFocus()
-            namedLoadButton:Show()
             self:Hide()
+            namedLoadButton:Show()
         end)
         nameInput:SetScript("OnEnterPressed", function(self)
             local offset = FauxScrollFrame_GetOffset(scrollBar)
             local index = offset + self:GetParent().index
             local inputText = self:GetText()
-            inputText = (inputText and inputText ~= "") and inputText or
-                            "<unnamed>"
-            TalentSequenceSavedSequences[index].name = inputText
+            local newName = (inputText and inputText ~= "") and inputText or
+                            ts.L.UNNAMED
+            TalentSequenceSavedSequences[index].name = newName
             namedLoadButton:Show()
             self:Hide()
             ts:UpdateSequencesFrame()
         end)
         namedLoadButton:SetScript("OnEnter", function(self)
             tooltip:SetOwner(self, "ANCHOR_RIGHT")
-            tooltip:SetText("Click to Load Sequence")
+            tooltip:SetText(ts.L.LOAD_SEQUENCE_TIP)
             tooltip:Show()
         end)
         namedLoadButton:SetScript("OnLeave", function() tooltip:Hide() end)
@@ -290,42 +290,44 @@ function ts.CreateImportFrame()
             local sequence = TalentSequenceSavedSequences[index]
             ts:SetTalents(sequence.talents)
         end)
-        deleteFrame:SetScript("OnEnter", function(self)
-            delete:SetVertexColor(1, 1, 1, 1)
-            tooltip:SetOwner(self, "ANCHOR_RIGHT")
-            tooltip:SetText("<Shift>Click to Delete")
+        local function onIconButtonEnter(tooltipText, button, icon)
+            icon:SetVertexColor(1, 1, 1, 1)
+            tooltip:SetOwner(button, "ANCHOR_RIGHT")
+            tooltip:SetText(tooltipText)
             tooltip:Show()
-        end)
-        deleteFrame:SetScript("OnLeave", function()
-            delete:SetVertexColor(1, 1, 1, 0.5)
+        end
+        local function onIconButtonLeave(icon)
+            icon:SetVertexColor(1, 1, 1, 0.5)
             tooltip:Hide()
+        end
+        deleteButton:SetScript("OnEnter", function(self)
+            onIconButtonEnter(ts.L.DELETE_TIP, self, delete)
         end)
-        renameFrame:SetScript("OnEnter", function(self)
-            rename:SetVertexColor(1, 1, 1, 1)
-            tooltip:SetOwner(self, "ANCHOR_RIGHT")
-            tooltip:SetText("Click to Rename")
-            tooltip:Show()
+        deleteButton:SetScript("OnLeave", function()
+            onIconButtonLeave(delete)
         end)
-        renameFrame:SetScript("OnLeave", function()
-            rename:SetVertexColor(1, 1, 1, 0.5)
-            tooltip:Hide()
+        renameButton:SetScript("OnEnter", function(self)
+            onIconButtonEnter(ts.L.RENAME_TIP, self, rename)
         end)
-        deleteFrame:SetScript("OnClick", function(self)
+        renameButton:SetScript("OnLeave", function()
+            onIconButtonLeave(rename)
+        end)
+        deleteButton:SetScript("OnClick", function(self)
             if (not IsShiftKeyDown()) then return end
             local offset = FauxScrollFrame_GetOffset(scrollBar)
             local index = offset + self:GetParent().index
             tremove(TalentSequenceSavedSequences, index)
             ts:UpdateSequencesFrame()
         end)
-        renameFrame:SetScript("OnClick", function(self)
+        renameButton:SetScript("OnClick", function(self)
             self:GetParent():SetForRename()
         end)
 
         function row:SetForRename()
             local offset = FauxScrollFrame_GetOffset(scrollBar)
             local index = offset + self.index
-            nameInput:SetText(TalentSequenceSavedSequences[index].name)
             namedLoadButton:Hide()
+            nameInput:SetText(TalentSequenceSavedSequences[index].name)
             nameInput:Show()
             nameInput:SetFocus()
             nameInput:HighlightText()
@@ -536,7 +538,7 @@ function ts.CreateMainFrame()
     loadButton:SetPoint("TOP", mainFrame, "BOTTOM", 0, 4)
     loadButton:SetPoint("RIGHT", mainFrame)
     loadButton:SetPoint("LEFT", mainFrame)
-    loadButton:SetText(ts.L["LOAD"])
+    loadButton:SetText(ts.L.LOAD)
     loadButton:SetHeight(22)
     loadButton:SetScript("OnClick", function()
         if (ts.ImportFrame == nil) then ts.CreateImportFrame() end
@@ -551,7 +553,7 @@ function ts.CreateMainFrame()
         showButton:SetText("<<")
         mainFrame:Show()
     end
-    showButton.tooltip = ts.L["TOGGLE"]
+    showButton.tooltip = ts.L.TOGGLE
     showButton:SetScript("OnClick", function(self)
         IsTalentSequenceExpanded = not IsTalentSequenceExpanded
         if (IsTalentSequenceExpanded) then

@@ -10,7 +10,11 @@ local localeText = {
         IMPORT_DIALOG = "Paste your talent string into the box below",
         OK = "OK",
         CANCEL = "Cancel",
-        WRONG_CLASS = "Unable to import, you're not a %s!"
+        WRONG_CLASS = "Unable to import, you're not a %s!",
+        LOAD_SEQUENCE_TIP = "Click to Load Sequence",
+        DELETE_TIP = "<Shift>Click to Delete",
+        RENAME_TIP = "Click to Rename",
+        UNNAMED = "<unnamed>"
     }
 };
 
