@@ -1,3 +1,5 @@
+LoadAddOn("Blizzard_TalentUI")
+
 local addonName, ts = ...
 
 local _G = _G
@@ -127,7 +129,7 @@ local function InsertSequence(talentSequence)
 end
 
 function ts:ImportTalents(talentsString)
-    local talents = ts.BoboTalents.GetTalents(talentsString)
+    local talents = ts.IcyVeinsTalents.GetTalents(talentsString)
     if (talents == nil) then return end
     InsertSequence(talents)
     if (self.ImportFrame and self.ImportFrame:IsShown()) then
@@ -359,9 +361,11 @@ function ts.CreateImportFrame()
 end
 
 function ts.CreateMainFrame()
-    local mainFrame = CreateFrame("Frame", "TalentOrderFrame", TalentFrame)
-    mainFrame:SetPoint("TOPLEFT", "TalentFrame", "TOPRIGHT", -36, -12)
-    mainFrame:SetPoint("BOTTOMLEFT", "TalentFrame", "BOTTOMRIGHT", 0, 72)
+    local mainFrame = CreateFrame("Frame", nil, PlayerTalentFrame, BackdropTemplateMixin and "BackdropTemplate")
+    mainFrame:SetPoint("CENTER")
+    mainFrame:SetSize(128, 128)
+    mainFrame:SetPoint("TOPLEFT", "PlayerTalentFrame", "TOPRIGHT", -36, -12)
+    mainFrame:SetPoint("BOTTOMLEFT", "PlayerTalentFrame", "BOTTOMRIGHT", 0, 72)
     mainFrame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -370,6 +374,7 @@ function ts.CreateMainFrame()
         edgeSize = 16,
         insets = {left = 4, right = 4, top = 4, bottom = 4}
     })
+    mainFrame:SetBackdropColor(0, 0, 1, .5)
     mainFrame:SetScript("OnShow", function(self)
         ts.ScrollFirstUnlearnedTalentIntoView(self)
     end)
@@ -500,7 +505,7 @@ function ts.CreateMainFrame()
             end
 
             local iconTexture = _G[self.icon:GetName() .. "IconTexture"]
-            if (talent.tab ~= TalentFrame.selectedTab) then
+            if (talent.tab ~= PlayerTalentFrame.selectedTab) then
                 iconTexture:SetVertexColor(1.0, 1.0, 1.0, 0.25)
             else
                 iconTexture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
@@ -544,9 +549,8 @@ function ts.CreateMainFrame()
         if (ts.ImportFrame == nil) then ts.CreateImportFrame() end
         ts.ImportFrame:Show()
     end)
-
     local showButton = CreateFrame("Button", "ShowTalentOrderButton",
-                                   TalentFrame, "UIPanelButtonTemplate")
+                                   PlayerTalentFrame, "UIPanelButtonTemplate")
     showButton:SetPoint("TOPRIGHT", -62, -18)
     showButton:SetText(">>")
     if (IsTalentSequenceExpanded) then
@@ -572,7 +576,6 @@ function ts.CreateMainFrame()
     showButton:SetScript("OnLeave", function() tooltip:Hide() end)
     showButton:SetHeight(14)
     showButton:SetWidth(showButton:GetTextWidth() + 10)
-
     ts.MainFrame = mainFrame
 end
 

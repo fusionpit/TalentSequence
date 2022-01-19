@@ -1,3 +1,6 @@
+* 3.0
+    - Fixed issues preventing addon from running with TBC Classic + ported to use Icy Veins talent calculator
+    
 * 2.0
     - Added support for multiple sequences
 

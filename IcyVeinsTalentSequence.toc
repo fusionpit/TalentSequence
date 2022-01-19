@@ -1,0 +1,13 @@
+## Interface: 20503
+## Title: Icy Veins Talent Sequence
+## Version: 3.0.0
+## Author: Moregelen, Sveng
+## Notes: Shows what order you should spend talent points in, based on Icy Veins talent calculator. This TBC Classic compatible remake was forked from the original Talent Sequence addon
+## SavedVariablesPerCharacter: IsTalentSequenceExpanded, TalentSequenceTalents, TalentSequenceSavedSequences
+## X-Testers: /u/thisisverytricky
+## X-Curse-Project-ID: 324447
+## X-WoWI-ID: 25021
+
+Localization.lua
+IcyVeinsTalents.lua
+TalentSequence.lua
