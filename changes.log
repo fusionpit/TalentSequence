@@ -1,33 +1,44 @@
-* 2.0
-    - Added support for multiple sequences
+3.0
+  - Misc. changes as part of the TalentSequence 2(TS2) fork (some below changes refer to fixes to the TS2 fork)
+  - Removed IcyVeins support added in TS2 fork
+  - Added support for importing sequences regardless of class
+  - Fixed issue where talent rank count was off
+  - Fixed incorrect indexing, now supporting Classic once more
+  - Added support for class-specific use across characters of same class
+  - Added user-facing success/failure windows for clarity/feedback
+  - Adjusted import/load sequence windows (Title, import button location)
+  - Added name creation for imports as part of import process
 
-* 1.2.3
-    - Fixed issue where error would sometimes occur on login
+2.0
+  - Added support for multiple sequences
 
-* 1.2.2
-    - Fixed issue where addon would not attach to the talent ui if DejaClassicStats is enabled
+1.2.3
+  - Fixed issue where error would sometimes occur on login
 
-* 1.2.1
-    - Fixed level text with a 4 or 8 sometimes getting turned into ...
+1.2.2
+  - Fixed issue where addon would not attach to the talent ui if DejaClassicStats is enabled
 
-* 1.2
-    - Fixed an issue where importing a sequence that includes talents you already know would not properly adjust the scroll bar
+1.2.1
+  - Fixed level text with a 4 or 8 sometimes getting turned into ...
 
-* 1.1
-    - Won't try to import if the url is for a different class
+1.2
+  - Fixed an issue where importing a sequence that includes talents you already know would not properly adjust the scroll bar
+
+1.1
+  - Won't try to import if the url is for a different class
     
-* 1.0
-    - Fixed rank text being slightly offset
-    - Support more versions of Bobo-Talent urls
+1.0
+  - Fixed rank text being slightly offset
+  - Support more versions of Bobo-Talent urls
 
-* 0.1-beta
-    - Fixed icons of not known talents being desaturated
+0.1-beta
+  - Fixed icons of not known talents being desaturated
 
-* 0.3-alpha
-    - Now works in Classic Beta, thanks to /u/mrdarkey and /u/lentus
+0.3-alpha
+  - Now works in Classic Beta, thanks to /u/mrdarkey and /u/lentus
 
-* 0.2-alpha
-    - Fix Classic not having the "ItemButton" frame type
+0.2-alpha
+  - Fix Classic not having the "ItemButton" frame type
 
-* 0.1-alpha
-    - Intial Release
+0.1-alpha
+  - Intial Release

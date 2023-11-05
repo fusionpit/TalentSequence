@@ -1,15 +1,17 @@
-## Interface: 11302
+## Interface: 11404
 ## Title: Talent Sequence
 ## Version: @project-version@
-## Author: Sveng
+## Author: Sveng, Moregelen, Zeke
 ## LoadOnDemand: 1
 ## LoadWith: Blizzard_TalentUI
-## Notes: Shows what order you should spend talent points in, based on bobo-talents.com
-## SavedVariablesPerCharacter: IsTalentSequenceExpanded, TalentSequenceTalents, TalentSequenceSavedSequences
-## X-Testers: /u/mrdarkey and /u/lentus
+## Notes: Shows what order you should spend talent points in, based on Wowhead Talent Calculator. This is geared for Classic_Era, and forked back from the TalentSequence 2 addon.
+## SavedVariablesPerCharacter: IsTalentSequenceExpanded, TalentSequenceTalents
+## SavedVariables: TalentSequenceSavedSequences
+## X-Testers: /u/mrdarkey, /u/lentus, /u/thisisverytricky
 ## X-Curse-Project-ID: 324447
 ## X-WoWI-ID: 25021
 
 Localization.lua
-BoboTalents.lua
+WowheadClassKeys.lua
+WowheadTalents.lua
 TalentSequence.lua
