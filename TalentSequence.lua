@@ -65,7 +65,7 @@ StaticPopupDialogs[NO_WOWHEAD_CLASSIC] = { -- Error when link doesn't contain "w
         self.editBox:SetWidth(250)
         self.editBox:SetFocus()
         self.editBox:SetText("https://www.wowhead.com/classic/talent-calc/")
-        self.editBox:HighlightText()        
+        self.editBox:HighlightText()
     end,
     EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
@@ -83,9 +83,9 @@ StaticPopupDialogs[INVALID_LINK] = { -- General error when link doesn't have eno
         self.editBox:SetWidth(250)
         self.editBox:SetFocus()
         self.editBox:SetText("https://www.wowhead.com/classic/talent-calc/")
-        self.editBox:HighlightText()        
+        self.editBox:HighlightText()
     end,
-    OnAccept = function(self) 
+    OnAccept = function(self)
         self:Hide()
         StaticPopup_Show(IMPORT_NAME_DIALOG)
     end,
@@ -159,12 +159,12 @@ StaticPopupDialogs[IMPORT_NAME_DIALOG] = { -- Prompt for name of the talents bui
             return true
         else
             if (strfind(importName, "https://") ~= nil) or (strfind(importName, ".com") ~= nil)then
-                self:Hide()            
+                self:Hide()
                 StaticPopup_Show(CONFIRM_NAME)
             else
-                self:Hide()                
+                self:Hide()
                 StaticPopup_Show(IMPORT_DIALOG)
-            end            
+            end
         end
 
     end,
@@ -177,7 +177,7 @@ StaticPopupDialogs[IMPORT_NAME_DIALOG] = { -- Prompt for name of the talents bui
         else
             self:GetParent():Hide()
             StaticPopup_Show(IMPORT_DIALOG)
-        end        
+        end
     end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
     timeout = 0,
