@@ -2,8 +2,6 @@
 ## Title: Talent Sequence
 ## Version: @project-version@
 ## Author: Sveng, Moregelen, Zeke
-## LoadOnDemand: 1
-## LoadWith: Blizzard_TalentUI
 ## Notes: Shows what order you should spend talent points in, based on Wowhead Talent Calculator. This is geared for Classic_Era, and forked back from the TalentSequence 2 addon.
 ## SavedVariablesPerCharacter: IsTalentSequenceExpanded, TalentSequenceTalents
 ## SavedVariables: TalentSequenceSavedSequences
