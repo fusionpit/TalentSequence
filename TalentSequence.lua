@@ -9,6 +9,7 @@ local LearnTalent = LearnTalent
 local CreateFrame = CreateFrame
 local IsAddOnLoaded = IsAddOnLoaded
 local StaticPopup_Show = StaticPopup_Show
+local StaticPopup_Hide = StaticPopup_Hide
 local FauxScrollFrame_SetOffset = FauxScrollFrame_SetOffset
 local FauxScrollFrame_GetOffset = FauxScrollFrame_GetOffset
 local FauxScrollFrame_OnVerticalScroll = FauxScrollFrame_OnVerticalScroll
@@ -16,6 +17,7 @@ local FauxScrollFrame_Update = FauxScrollFrame_Update
 local hooksecurefunc = hooksecurefunc
 local format = format
 local ceil = ceil
+local strfind = strfind
 local GREEN_FONT_COLOR = GREEN_FONT_COLOR
 local NORMAL_FONT_COLOR = NORMAL_FONT_COLOR
 local RED_FONT_COLOR = RED_FONT_COLOR
@@ -24,16 +26,95 @@ local GRAY_FONT_COLOR = GRAY_FONT_COLOR
 local TALENT_ROW_HEIGHT = 38
 local MAX_TALENT_ROWS = 10
 local SEQUENCES_ROW_HEIGHT = 26
-local MAX_SEQUENCE_ROWS = 5
+local MAX_SEQUENCE_ROWS = 7
 local SCROLLING_WIDTH = 102
 local NONSCROLLING_WIDTH = 84
-local IMPORT_DIALOG = "TALENTSEQUENCEIMPORTDIALOG"
+local MAX_CLASSES = 8
+local IMPORT_DIALOG = "TS-IMPORTDIALOG"
+local IMPORT_NAME_DIALOG = "TS-IMPORTNAMEDIALOG"
+local MISSING_NAME = "TS-MISSINGNAME"
+local NO_WOWHEAD_CLASSIC = "TS-NOWOWHEADCLASSIC"
+local INVALID_LINK = "TS-INVALIDLINK"
+local CONFIRM_NAME = "TS-CONFIRMNAME"
+local SUCCESS = "TS-SUCCESS"
 local LEVEL_WIDTH = 20
+local UsingTalented = false
+local _, characterClass = UnitClass("player")
+characterClass = strlower(characterClass)
+local characterClassIndex = 0
+local importName = ""
+
 
 IsTalentSequenceExpanded = false
 TalentSequenceTalents = {}
 
-StaticPopupDialogs[IMPORT_DIALOG] = {
+StaticPopupDialogs[MISSING_NAME] = { -- Error when name field is empty
+    text = ts.L.MISSING_NAME,
+    hasEditBox = false,
+    button1 = ts.L.OK,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+}
+StaticPopupDialogs[NO_WOWHEAD_CLASSIC] = { -- Error when link doesn't contain "wowhead" or "classic" (IE: wowhead.com/wotlk/)
+    text = ts.L.NO_WOWHEAD_CLASSIC,
+    hasEditBox = true,
+    button1 = ts.L.OK,
+    OnShow = function(self) 
+        self.editBox:SetWidth(250)
+        self.editBox:SetFocus()
+        self.editBox:SetText("https://www.wowhead.com/classic/talent-calc/")
+        self.editBox:HighlightText()        
+    end,
+    EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+}
+StaticPopupDialogs[INVALID_LINK] = { -- General error when link doesn't have enough elements (Talent sequence, ranks, etc)
+    text = ts.L.INVALID_LINK,
+    hasEditBox = true,
+    button1 = ts.L.TRY_AGAIN,
+    button2 = ts.L.CANCEL,
+    OnShow = function(self) 
+        self.editBox:SetWidth(250)
+        self.editBox:SetFocus()
+        self.editBox:SetText("https://www.wowhead.com/classic/talent-calc/")
+        self.editBox:HighlightText()        
+    end,
+    OnAccept = function(self) 
+        self:Hide()
+        StaticPopup_Show(IMPORT_NAME_DIALOG)
+    end,
+    EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+}
+StaticPopupDialogs[CONFIRM_NAME] = { -- Prevention idea for paste-happy users pasting Links into the name field
+    text = ts.L.EARLY_LINK,
+    hasEditBox = false,
+    button1 = ts.L.CONFIRM,
+    button2 = ts.L.RE_ENTER,
+    OnButton1 = function(self)
+        self:Hide()
+        StaticPopup_Show(IMPORT_DIALOG)
+    end,
+    OnCancel = function(self)
+        self:Hide()
+        StaticPopup_Show(IMPORT_NAME_DIALOG)
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+}
+StaticPopupDialogs[IMPORT_DIALOG] = { -- Prompt for talent sequence link
     text = ts.L.IMPORT_DIALOG,
     hasEditBox = true,
     button1 = ts.L.OK,
@@ -41,15 +122,74 @@ StaticPopupDialogs[IMPORT_DIALOG] = {
     OnShow = function(self) _G[self:GetName() .. "EditBox"]:SetText("") end,
     OnAccept = function(self)
         local talentsString = self.editBox:GetText()
-        ts:ImportTalents(talentsString)
+        if (strfind(talentsString, "wowhead") == nil) or (strfind(talentsString, "classic") == nil) then
+            StaticPopup_Show(NO_WOWHEAD_CLASSIC)
+            return true
+        else
+            ts:ImportTalents(talentsString)
+        end
     end,
     EditBoxOnEnterPressed = function(self)
         local talentsString =
             _G[self:GetParent():GetName() .. "EditBox"]:GetText()
-        ts:ImportTalents(talentsString)
-        self:GetParent():Hide()
+        if (strfind(talentsString, "wowhead") == nil) or (strfind(talentsString, "classic") == nil) then
+            StaticPopup_Show(NO_WOWHEAD_CLASSIC)
+            return true
+        else
+            ts:ImportTalents(talentsString)
+            self:GetParent():Hide()
+        end
     end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+}
+StaticPopupDialogs[IMPORT_NAME_DIALOG] = { -- Prompt for name of the talents build
+    text = ts.L.IMPORT_NAME_DIALOG,
+    hasEditBox = true,
+    button1 = ts.L.OK,
+    button2 = ts.L.CANCEL,
+    OnShow = function(self) _G[self:GetName() .. "EditBox"]:SetText("") end,
+    OnAccept = function(self)
+        importName = self.editBox:GetText()
+        if (importName == "") then
+            StaticPopup_Show(MISSING_NAME)
+            return true
+        else
+            if (strfind(importName, "https://") ~= nil) or (strfind(importName, ".com") ~= nil)then
+                self:Hide()            
+                StaticPopup_Show(CONFIRM_NAME)
+            else
+                self:Hide()                
+                StaticPopup_Show(IMPORT_DIALOG)
+            end            
+        end
+
+    end,
+    EditBoxOnEnterPressed = function(self)
+        importName =
+            _G[self:GetParent():GetName() .. "EditBox"]:GetText()
+        if(importName == "") then
+            StaticPopup_Show(MISSING_NAME)
+            return true
+        else
+            self:GetParent():Hide()
+            StaticPopup_Show(IMPORT_DIALOG)
+        end        
+    end,
+    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+
+}
+StaticPopupDialogs[SUCCESS] = { -- Success message when importing another class's talents (IE: Importing Rogue talents while playing Warlock)
+    text = ts.L.SUCCESS,
+    hasEditBox = false,
+    button1 = ts.L.OK,
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
@@ -116,30 +256,66 @@ function ts.UpdateTalentFrame(frame)
     end
 end
 
-local function InsertSequence(talentSequence)
+local function grabClassIndex(classToGrab) -- Grabs class index from TalentSequenceSavedSequences table to ensure Talents are inserted into the index AFTER the name.
+    local classIndex = 0
+    for i = 1, #TalentSequenceSavedSequences, 1 do
+        if (TalentSequenceSavedSequences[i] == classToGrab) then
+            classIndex = i + 1
+            return classIndex
+        end
+    end
+end
+
+local function InsertSequence(talentSequence, class) -- Inserts talent build/sequence into TalentSequenceSavedSequences
     local tabTotals = {0, 0, 0}
+    local classTableIndex = grabClassIndex(class)
+    local nameToInsert = importName
+    if (importName == "") then
+        nameToInsert = ts.L.UNNAMED
+    end    
     for _, talent in ipairs(talentSequence) do
         tabTotals[talent.tab] = tabTotals[talent.tab] + 1
     end
     local points = string.format("%d/%d/%d", unpack(tabTotals))
-    tinsert(TalentSequenceSavedSequences, 1,
-            {name = "<unnamed>", talents = talentSequence, points = points})
+    tinsert(TalentSequenceSavedSequences[classTableIndex], 1,
+            {name = nameToInsert, talents = talentSequence, points = points})
 end
 
-function ts:ImportTalents(talentsString)
-    local talents = ts.BoboTalents.GetTalents(talentsString)
+local function splitString(string, splitter) -- Splits string elements into table indices. Used to separate the url into parts, as well as separate the talent ranks into their tabs (IE: 555-32-123)
+    local resultSplit = {}
+    for w in string:gmatch("([^"..splitter.."]+)") do
+        tinsert(resultSplit, w)
+    end
+    return resultSplit
+end
+
+function ts:ImportTalents(talentsString, name) -- Checks the url entered and attempts to call the InsertSequence function to add it to the saved list.
+    local talents = {}
+    local linkSplit = splitString(talentsString, "/")
+    local iWowhead, iClassic, iClass, iRank, iSequence = 2, 3, 5, 6, 7 -- Indices for respective values in linkSplit
+    if (#linkSplit < 6) then -- checking for missing pieces
+        StaticPopup_Show(INVALID_LINK)
+        return
+    end
+    if (#linkSplit == 6) then -- if someone doesn't copy the https:// -- might as well check for it since it's not technically necessary.
+        iWowhead, iClassic, iClass, iRank, iSequence = 1, 2, 4, 5, 6
+    end
+    linkSplit[iRank] = linkSplit[iRank]:gsub("-",".-")
+    linkSplit[iRank] = splitString(linkSplit[iRank], '-')
+    local talents = ts.WowheadTalents.GetTalents(linkSplit[iRank], linkSplit[iSequence], linkSplit[iClass]) -- passes Ranks, Talent selections, and the class associated with the Talents.
     if (talents == nil) then return end
-    InsertSequence(talents)
-    if (self.ImportFrame and self.ImportFrame:IsShown()) then
+    InsertSequence(talents, linkSplit[iClass])
+    if (self.ImportFrame and self.ImportFrame:IsShown()) and (linkSplit[iClass] == characterClass) then -- Checking to update the currently visible list of imported talent builds
         local scrollBar = self.ImportFrame.scrollBar
         FauxScrollFrame_SetOffset(scrollBar, 0)
         FauxScrollFrame_OnVerticalScroll(scrollBar, 0, SEQUENCES_ROW_HEIGHT)
         ts:UpdateSequencesFrame()
-        ts.ImportFrame.rows[1]:SetForRename()
+    else
+        StaticPopup_Show(SUCCESS)
     end
 end
 
-function ts:SetTalents(talents)
+function ts:SetTalents(talents) -- Adds talents to the right of the talent window (Talented or not)
     if (talents == nil) then return end
     ts.Talents = talents
     TalentSequenceTalents = ts.Talents
@@ -156,29 +332,34 @@ end
 function ts:UpdateSequencesFrame()
     local frame = self.ImportFrame
     frame:ShowAllLoadButtons()
-    FauxScrollFrame_Update(frame.scrollBar, #TalentSequenceSavedSequences,
+    FauxScrollFrame_Update(frame.scrollBar, #TalentSequenceSavedSequences[characterClassIndex],
                            MAX_SEQUENCE_ROWS, SEQUENCES_ROW_HEIGHT, nil, nil,
                            nil, nil, nil, nil, true)
     local offset = FauxScrollFrame_GetOffset(frame.scrollBar)
     for i = 1, MAX_SEQUENCE_ROWS do
         local index = i + offset
         local row = frame.rows[i]
-        row:SetSequence(TalentSequenceSavedSequences[index])
-        end
+        row:SetSequence(TalentSequenceSavedSequences[characterClassIndex][index])
     end
+end
 
-function ts.CreateImportFrame()
-    local sequencesFrame = CreateFrame("Frame", "TalentSequences", UIParent,
-                                       "BasicFrameTemplateWithInset")
+function ts.CreateImportFrame(talentFrame)
+    local sequencesFrame = nil
+    if (UsingTalented) then 
+        sequencesFrame = CreateFrame("Frame", "TalentSequences", _G[talentFrame], "BasicFrameTemplateWithInset") 
+    else
+        sequencesFrame = CreateFrame("Frame", "TalentSequences", UIParent, "BasicFrameTemplateWithInset")
+    end
     sequencesFrame:Hide()
     sequencesFrame:SetScript("OnShow", function() ts:UpdateSequencesFrame() end)
-    sequencesFrame:SetSize(325, 212)
+    sequencesFrame:SetSize(375, 250)
     sequencesFrame:SetPoint("CENTER")
     sequencesFrame:SetMovable(true)
     sequencesFrame:SetClampedToScreen(true)
     sequencesFrame:SetScript("OnMouseDown", sequencesFrame.StartMoving)
     sequencesFrame:SetScript("OnMouseUp", sequencesFrame.StopMovingOrSizing)
-    sequencesFrame.TitleText:SetText("Talent Sequences")
+    sequencesFrame.TitleText:SetText("Talent Sequences - "..(characterClass:gsub("^%l", string.upper)))
+    sequencesFrame.TitleText:SetPoint("TOPLEFT", sequencesFrame, 15, -6)
     function sequencesFrame:ShowAllLoadButtons()
         for _, row in ipairs(self.rows) do row:SetForLoad() end
     end
@@ -187,19 +368,26 @@ function ts.CreateImportFrame()
                                   sequencesFrame, "FauxScrollFrameTemplate")
     scrollBar:SetPoint("TOPLEFT", sequencesFrame.InsetBg, "TOPLEFT", 5, -6)
     scrollBar:SetPoint("BOTTOMRIGHT", sequencesFrame.InsetBg, "BOTTOMRIGHT",
-                       -28, 28)
+                       -28, 5)
 
     sequencesFrame.scrollBar = scrollBar
 
     local importButton = CreateFrame("Button", nil, sequencesFrame,
                                      "UIPanelButtonTemplate")
-    importButton:SetPoint("BOTTOM", 0, 8)
+    importButton:SetPoint("TOPRIGHT", -23, 2)
     importButton:SetSize(75, 24)
     importButton:SetText("Import")
+    importButton.tooltip = ts.L.IMPORT_TOOLTIP
     importButton:SetNormalFontObject("GameFontNormal")
     importButton:SetHighlightFontObject("GameFontHighlight")
     importButton:SetScript("OnClick",
-                           function() StaticPopup_Show(IMPORT_DIALOG) end)
+                           function() StaticPopup_Show(IMPORT_NAME_DIALOG) end)
+    importButton:SetScript("OnEnter", function(self)
+        tooltip:SetOwner(self, "ANCHOR_RIGHT")
+        tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
+        tooltip:Show()
+    end)
+    importButton:SetScript("OnLeave", function() tooltip:Hide() end)
 
     local rows = {}
     for i = 1, MAX_SEQUENCE_ROWS do
@@ -213,7 +401,7 @@ function ts.CreateImportFrame()
         nameInput:SetPoint("TOP")
         nameInput:SetPoint("BOTTOM")
         nameInput:SetPoint("LEFT")
-        nameInput:SetWidth(150)
+        nameInput:SetWidth(200)
         nameInput:SetAutoFocus(false)
 
         local namedLoadButton = CreateFrame("Button", nil, row,
@@ -229,7 +417,7 @@ function ts.CreateImportFrame()
         function row:SetSequence(sequence)
             if (sequence == nil) then
                 self:Hide()
-            else
+            else 
                 self:Show()
                 namedLoadButton:SetText(sequence.name)
                 talentAmountString:SetText(sequence.points)
@@ -273,7 +461,7 @@ function ts.CreateImportFrame()
             local inputText = self:GetText()
             local newName = (inputText and inputText ~= "") and inputText or
                             ts.L.UNNAMED
-            TalentSequenceSavedSequences[index].name = newName
+            TalentSequenceSavedSequences[characterClassIndex][index].name = newName
             namedLoadButton:Show()
             self:Hide()
             ts:UpdateSequencesFrame()
@@ -287,7 +475,7 @@ function ts.CreateImportFrame()
         namedLoadButton:SetScript("OnClick", function(self)
             local offset = FauxScrollFrame_GetOffset(scrollBar)
             local index = offset + self:GetParent().index
-            local sequence = TalentSequenceSavedSequences[index]
+            local sequence = TalentSequenceSavedSequences[characterClassIndex][index]
             ts:SetTalents(sequence.talents)
         end)
         local function onIconButtonEnter(tooltipText, button, icon)
@@ -316,7 +504,7 @@ function ts.CreateImportFrame()
             if (not IsShiftKeyDown()) then return end
             local offset = FauxScrollFrame_GetOffset(scrollBar)
             local index = offset + self:GetParent().index
-            tremove(TalentSequenceSavedSequences, index)
+            tremove(TalentSequenceSavedSequences[characterClassIndex], index)
             ts:UpdateSequencesFrame()
         end)
         renameButton:SetScript("OnClick", function(self)
@@ -327,7 +515,7 @@ function ts.CreateImportFrame()
             local offset = FauxScrollFrame_GetOffset(scrollBar)
             local index = offset + self.index
             namedLoadButton:Hide()
-            nameInput:SetText(TalentSequenceSavedSequences[index].name)
+            nameInput:SetText(TalentSequenceSavedSequences[characterClassIndex][index].name)
             nameInput:Show()
             nameInput:SetFocus()
             nameInput:HighlightText()
@@ -358,18 +546,36 @@ function ts.CreateImportFrame()
     ts.ImportFrame = sequencesFrame
 end
 
-function ts.CreateMainFrame()
-    local mainFrame = CreateFrame("Frame", "TalentOrderFrame", TalentFrame)
-    mainFrame:SetPoint("TOPLEFT", "TalentFrame", "TOPRIGHT", -36, -12)
-    mainFrame:SetPoint("BOTTOMLEFT", "TalentFrame", "BOTTOMRIGHT", 0, 72)
-    mainFrame:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets = {left = 4, right = 4, top = 4, bottom = 4}
-    })
+function ts.CreateMainFrame(talentFrame)
+    local mainFrame = CreateFrame("Frame", nil, _G[talentFrame], BackdropTemplateMixin and "BackdropTemplate")
+    mainFrame:SetPoint("CENTER")
+    mainFrame:SetSize(128, 128)
+    if (not UsingTalented) then
+        mainFrame:SetPoint("TOPLEFT", talentFrame, "TOPRIGHT", -36, -12)
+        mainFrame:SetPoint("BOTTOMLEFT", talentFrame, "BOTTOMRIGHT", 0, 72)
+        mainFrame:SetBackdrop({
+            bgFile = "Interface\\FrameGeneral\\UI-Background-Marble",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true,
+            tileSize = 16,
+            edgeSize = 16,
+            insets = {left = 4, right = 4, top = 4, bottom = 4}
+        })
+    else
+        mainFrame:SetPoint("TOPLEFT", talentFrame, "TOPRIGHT", 0, 0)
+        mainFrame:SetPoint("BOTTOMLEFT", talentFrame, "TOPRIGHT", 0, -450)
+        mainFrame:SetBackdrop({
+	    bgFile = "Interface\\FrameGeneral\\UI-Background-Marble",
+	    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+	    tile = true,
+	    tileEdge = true,
+	    tileSize = 16,
+	    edgeSize = 16,
+	    insets = { left = 3, right = 5, top = 3, bottom = 5 },
+        })
+    end
+    
+    mainFrame:SetBackdropColor(0, 0, 0, 1)
     mainFrame:SetScript("OnShow", function(self)
         ts.ScrollFirstUnlearnedTalentIntoView(self)
     end)
@@ -387,11 +593,8 @@ function ts.CreateMainFrame()
             ts.UpdateTalentFrame(self)
         end
     end)
+    
     mainFrame:Hide()
-
-    hooksecurefunc("TalentFrameTab_OnClick", function()
-        if (mainFrame:IsShown()) then ts.UpdateTalentFrame(mainFrame) end
-    end)
 
     local scrollBar = CreateFrame("ScrollFrame", "$parentScrollBar", mainFrame,
                                   "FauxScrollFrameTemplate")
@@ -500,11 +703,7 @@ function ts.CreateMainFrame()
             end
 
             local iconTexture = _G[self.icon:GetName() .. "IconTexture"]
-            if (talent.tab ~= TalentFrame.selectedTab) then
-                iconTexture:SetVertexColor(1.0, 1.0, 1.0, 0.25)
-            else
-                iconTexture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
-            end
+            iconTexture:SetVertexColor(1.0, 1.0, 1.0, 1.0)
 
             self.level.label:SetText(talent.level)
             local playerLevel = UnitLevel("player")
@@ -539,18 +738,34 @@ function ts.CreateMainFrame()
     loadButton:SetPoint("RIGHT", mainFrame)
     loadButton:SetPoint("LEFT", mainFrame)
     loadButton:SetText(ts.L.LOAD)
+    loadButton.tooltip = ts.L.LOAD_TOOLTIP
     loadButton:SetHeight(22)
     loadButton:SetScript("OnClick", function()
-        if (ts.ImportFrame == nil) then ts.CreateImportFrame() end
+        if (ts.ImportFrame == nil) then ts.CreateImportFrame(talentFrame) end
         ts.ImportFrame:Show()
+        if (UsingTalented) then
+            ts.ImportFrame:SetFrameLevel(4)
+            ts.ImportFrame:Raise()
+        end
     end)
+    loadButton:SetScript("OnEnter", function(self)
+        tooltip:SetOwner(self, "ANCHOR_RIGHT")
+        tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
+        tooltip:Show()
+    end)
+    loadButton:SetScript("OnLeave", function() tooltip:Hide() end)
 
     local showButton = CreateFrame("Button", "ShowTalentOrderButton",
-                                   TalentFrame, "UIPanelButtonTemplate")
-    showButton:SetPoint("TOPRIGHT", -62, -18)
-    showButton:SetText(">>")
+                                   _G[talentFrame], "UIPanelButtonTemplate")
+    if (not UsingTalented) then
+        showButton:SetPoint("TOPRIGHT", -120, -16)
+        showButton:SetHeight(18)
+    else
+        showButton:SetPoint("TOPRIGHT", -100, -4)
+    end
+    showButton:SetText("  Talent Sequence >>  ")
     if (IsTalentSequenceExpanded) then
-        showButton:SetText("<<")
+        showButton:SetText("  Talent Sequence <<  ")
         mainFrame:Show()
     end
     showButton.tooltip = ts.L.TOGGLE
@@ -558,10 +773,10 @@ function ts.CreateMainFrame()
         IsTalentSequenceExpanded = not IsTalentSequenceExpanded
         if (IsTalentSequenceExpanded) then
             mainFrame:Show()
-            self:SetText("<<")
+            self:SetText("  Talent Sequence <<  ")
         else
             mainFrame:Hide()
-            self:SetText(">>")
+            self:SetText("  Talent Sequence >>  ")
         end
     end)
     showButton:SetScript("OnEnter", function(self)
@@ -570,44 +785,69 @@ function ts.CreateMainFrame()
         tooltip:Show()
     end)
     showButton:SetScript("OnLeave", function() tooltip:Hide() end)
-    showButton:SetHeight(14)
     showButton:SetWidth(showButton:GetTextWidth() + 10)
-
     ts.MainFrame = mainFrame
 end
 
 local initRun = false
-local function init()
+local function init(talentFrame)
     if (initRun) then return end
     if (not TalentSequenceTalents) then TalentSequenceTalents = {} end
-    if (not TalentSequenceSavedSequences) then
-        TalentSequenceSavedSequences = {}
+    if (not TalentSequenceSavedSequences) then TalentSequenceSavedSequences = {} end
+    if (#TalentSequenceSavedSequences == 0) then -- Creates TalentSequenceSavedSequences
+        local insIndex = 1
+        for i, k in pairs(ClassTreeKeys) do
+            tinsert(TalentSequenceSavedSequences, insIndex, ClassTreeKeys[i].class)
+            tinsert(TalentSequenceSavedSequences, insIndex + 1, {})
+            insIndex = insIndex + 2
+        end
     end
-    if (#TalentSequenceTalents > 0 and #TalentSequenceSavedSequences == 0) then
-        InsertSequence(TalentSequenceTalents)
+    if (characterClassIndex == 0) then -- Grabbed so if there's a loaded build/sequence to be auto-imported, it's added to the correct class's table
+        characterClassIndex = grabClassIndex(characterClass)
+    end
+    if (#TalentSequenceTalents > 0 and #TalentSequenceSavedSequences[characterClassIndex] == 0) then
+        InsertSequence(TalentSequenceTalents, characterClass)
     end
     ts.Talents = TalentSequenceTalents
     if (IsTalentSequenceExpanded == 0) then IsTalentSequenceExpanded = false end
-    if (ts.MainFrame == nil) then ts.CreateMainFrame() end
+    if (ts.MainFrame == nil) then ts.CreateMainFrame(talentFrame) end
     initRun = true
 end
 
-local talentSequenceEventFrame = CreateFrame("Frame")
-talentSequenceEventFrame:SetScript("OnEvent", function(self, event, ...)
-    if (event == "ADDON_LOADED" and ... == addonName) then
-        init()
-        self:UnregisterEvent("ADDON_LOADED")
+local function hookTaleneted(Talented)
+    if Talented then
+        hooksecurefunc(Talented, "ToggleTalentFrame", function()
+            if (initRun) then return end
+            UsingTalented = true
+            init("TalentedFrame")
+        end)
     end
-    if (event == "PLAYER_LOGIN") then
-        init()
-        self:UnregisterEvent("ADDON_LOADED")
-        self:UnregisterEvent("PLAYER_LOGIN")
-    end
-end)
-talentSequenceEventFrame:RegisterEvent("ADDON_LOADED")
+end
 
--- Deja Stats loads the talent ui during its own ADDON_LOADED event,
--- which will prevent our ADDON_LOADED from being fired correctly
-if (IsAddOnLoaded("DejaClassicStats")) then
-    talentSequenceEventFrame:RegisterEvent("PLAYER_LOGIN")
+local _,_,_,talented_loadable, talented_error = GetAddOnInfo("Talented")
+if talented_loadable and not (talented_error == "MISSING" or talented_error == "DISABLED") then
+    local Talented
+    if GetAddOnEnableState((GetUnitName("player")),"Talented") == 2 then
+        local loaded, finished = IsAddOnLoaded("Talented")
+        if loaded and finished then
+            Talented = LibStub("AceAddon-3.0"):GetAddon("Talented",true)
+            hookTaleneted(Talented)
+        else
+            local talented_loader = CreateFrame("Frame")
+            talented_loader:SetScript("OnEvent", function(self,event,...)
+                if (...) == "Talented" then
+                    self:UnregisterEvent("ADDON_LOADED")
+                    Talented = LibStub("AceAddon-3.0"):GetAddon("Talented",true)
+                    hookTaleneted(Talented)
+                end
+            end)
+            talented_loader:RegisterEvent("ADDON_LOADED")
+        end
+    end
+else
+    hooksecurefunc("ToggleTalentFrame", function(...)
+        if (PlayerTalentFrame == nil) then return end
+        if (initRun) then return end
+        init("PlayerTalentFrame")
+    end)
 end
