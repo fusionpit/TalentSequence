@@ -290,22 +290,16 @@ local function splitString(string, splitter) -- Splits string elements into tabl
 end
 
 function ts:ImportTalents(talentsString, name) -- Checks the url entered and attempts to call the InsertSequence function to add it to the saved list.
-    local talents = {}
-    local linkSplit = splitString(talentsString, "/")
-    local iWowhead, iClassic, iClass, iRank, iSequence = 2, 3, 5, 6, 7 -- Indices for respective values in linkSplit
-    if (#linkSplit < 6) then -- checking for missing pieces
+    local _, _, class, rank, sequence = string.find(talentsString, "/talent%-calc/(%l+)/([0-9%-]+)/(.+)")
+    if (class == nil or rank == nil or sequence == nil) then
         StaticPopup_Show(INVALID_LINK)
         return
     end
-    if (#linkSplit == 6) then -- if someone doesn't copy the https:// -- might as well check for it since it's not technically necessary.
-        iWowhead, iClassic, iClass, iRank, iSequence = 1, 2, 4, 5, 6
-    end
-    linkSplit[iRank] = linkSplit[iRank]:gsub("-",".-")
-    linkSplit[iRank] = splitString(linkSplit[iRank], '-')
-    local talents = ts.WowheadTalents.GetTalents(linkSplit[iRank], linkSplit[iSequence], linkSplit[iClass]) -- passes Ranks, Talent selections, and the class associated with the Talents.
+    rank = splitString(rank:gsub("-",".-"), '-')
+    local talents = ts.WowheadTalents.GetTalents(rank, sequence, class) -- passes Ranks, Talent selections, and the class associated with the Talents.
     if (talents == nil) then return end
-    InsertSequence(talents, linkSplit[iClass])
-    if (self.ImportFrame and self.ImportFrame:IsShown()) and (linkSplit[iClass] == characterClass) then -- Checking to update the currently visible list of imported talent builds
+    InsertSequence(talents, class)
+    if (self.ImportFrame and self.ImportFrame:IsShown()) and (class == characterClass) then -- Checking to update the currently visible list of imported talent builds
         local scrollBar = self.ImportFrame.scrollBar
         FauxScrollFrame_SetOffset(scrollBar, 0)
         FauxScrollFrame_OnVerticalScroll(scrollBar, 0, SEQUENCES_ROW_HEIGHT)
