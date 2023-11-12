@@ -1,3 +1,5 @@
+local _, ts = ...
+
 --[[
 Each talent tree has a unique index make up so each
 class's spec's talents need to be outlined with the following macro:
@@ -15,7 +17,7 @@ then sort by 'talentIndex'.
 ***USED BY TalentSequence.lua TO CREATE/VALIDATE/ORDER CLASSES INTO TalentSequenceSavedSequences TABLE***
  
 ]]
-ClassTreeKeys = {
+ts.ClassTreeKeys = {
     {
         ["class"] = "druid",
         ["spec1"] = "baekghqndjprfmsc",     -- Balance

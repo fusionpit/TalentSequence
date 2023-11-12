@@ -796,8 +796,8 @@ local function init(talentFrame)
     if (not TalentSequenceSavedSequences) then TalentSequenceSavedSequences = {} end
     if (#TalentSequenceSavedSequences == 0) then -- Creates TalentSequenceSavedSequences
         local insIndex = 1
-        for i, k in pairs(ClassTreeKeys) do
-            tinsert(TalentSequenceSavedSequences, insIndex, ClassTreeKeys[i].class)
+        for i, k in pairs(ts.ClassTreeKeys) do
+            tinsert(TalentSequenceSavedSequences, insIndex, ts.ClassTreeKeys[i].class)
             tinsert(TalentSequenceSavedSequences, insIndex + 1, {})
             insIndex = insIndex + 2
         end

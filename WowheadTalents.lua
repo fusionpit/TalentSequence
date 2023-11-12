@@ -35,7 +35,7 @@ function ts.WowheadTalents.GetTalents(rank, sequence, class)
     local talentCounter = {} -- Keeps track of how many ranks have been added to a particular talent
     local tabCI = {} -- Class Spec Tab Index → see WowheadClassKeys.lua for more info.
 
-    for k, v in pairs(ClassTreeKeys) do -- Grabs the class's index keys and assigns to tabCI
+    for k, v in pairs(ts.ClassTreeKeys) do -- Grabs the class's index keys and assigns to tabCI
         if v.class == class then
             tabCI = {v.spec1, v.spec2, v.spec3}
         end
