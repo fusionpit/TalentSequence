@@ -1,4 +1,4 @@
-## Interface: 11404
+## Interface: 11500
 ## Title: Talent Sequence
 ## Version: @project-version@
 ## Author: Sveng, Moregelen, Zeke
