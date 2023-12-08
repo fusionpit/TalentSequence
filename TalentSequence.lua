@@ -290,7 +290,7 @@ local function splitString(string, splitter) -- Splits string elements into tabl
 end
 
 function ts:ImportTalents(talentsString, name) -- Checks the url entered and attempts to call the InsertSequence function to add it to the saved list.
-    local _, _, class, rank, sequence = string.find(talentsString, "/talent%-calc/(%l+)/([0-9%-]+)/(.+)")
+    local _, _, class, rank, sequence = string.find(talentsString, "/talent%-calc/(%l+)/(.+)/(.+)")
     if (class == nil or rank == nil or sequence == nil) then
         StaticPopup_Show(INVALID_LINK)
         return
