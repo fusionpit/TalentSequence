@@ -1,3 +1,6 @@
+3.1.1
+  - Fix for Issue #12, talents not importing when using URL including Season of Discovery runes.
+
 3.1
   - Update TOC for 1.15
 
