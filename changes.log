@@ -1,5 +1,6 @@
 3.2.0
   - Update ToC version
+  - Fix failure to import caused by recent ui changes
 
 3.1.5
   - Update ToC version

@@ -62,10 +62,10 @@ StaticPopupDialogs[NO_WOWHEAD_CLASSIC] = { -- Error when link doesn't contain "w
     hasEditBox = true,
     button1 = ts.L.OK,
     OnShow = function(self) 
-        self.editBox:SetWidth(250)
-        self.editBox:SetFocus()
-        self.editBox:SetText("https://www.wowhead.com/classic/talent-calc/")
-        self.editBox:HighlightText()
+        _G[self:GetName() .. "EditBox"]:SetWidth(250)
+        _G[self:GetName() .. "EditBox"]:SetFocus()
+        _G[self:GetName() .. "EditBox"]:SetText("https://www.wowhead.com/classic/talent-calc/")
+        _G[self:GetName() .. "EditBox"]:HighlightText()
     end,
     EditBoxOnEnterPressed = function(self) self:GetParent():Hide() end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
@@ -80,10 +80,10 @@ StaticPopupDialogs[INVALID_LINK] = { -- General error when link doesn't have eno
     button1 = ts.L.TRY_AGAIN,
     button2 = ts.L.CANCEL,
     OnShow = function(self) 
-        self.editBox:SetWidth(250)
-        self.editBox:SetFocus()
-        self.editBox:SetText("https://www.wowhead.com/classic/talent-calc/")
-        self.editBox:HighlightText()
+        _G[self:GetName() .. "EditBox"]:SetWidth(250)
+        _G[self:GetName() .. "EditBox"]:SetFocus()
+        _G[self:GetName() .. "EditBox"]:SetText("https://www.wowhead.com/classic/talent-calc/")
+        _G[self:GetName() .. "EditBox"]:HighlightText()
     end,
     OnAccept = function(self)
         self:Hide()
@@ -121,7 +121,7 @@ StaticPopupDialogs[IMPORT_DIALOG] = { -- Prompt for talent sequence link
     button2 = ts.L.CANCEL,
     OnShow = function(self) _G[self:GetName() .. "EditBox"]:SetText("") end,
     OnAccept = function(self)
-        local talentsString = self.editBox:GetText()
+        local talentsString = _G[self:GetName() .. "EditBox"]:GetText()
         if (strfind(talentsString, "wowhead") == nil) or (strfind(talentsString, "classic") == nil) then
             StaticPopup_Show(NO_WOWHEAD_CLASSIC)
             return true
@@ -153,7 +153,7 @@ StaticPopupDialogs[IMPORT_NAME_DIALOG] = { -- Prompt for name of the talents bui
     button2 = ts.L.CANCEL,
     OnShow = function(self) _G[self:GetName() .. "EditBox"]:SetText("") end,
     OnAccept = function(self)
-        importName = self.editBox:GetText()
+        importName = _G[self:GetName() .. "EditBox"]:GetText()
         if (importName == "") then
             StaticPopup_Show(MISSING_NAME)
             return true
@@ -326,14 +326,17 @@ end
 function ts:UpdateSequencesFrame()
     local frame = self.ImportFrame
     frame:ShowAllLoadButtons()
-    FauxScrollFrame_Update(frame.scrollBar, #TalentSequenceSavedSequences[characterClassIndex],
+    local sequences = TalentSequenceSavedSequences[characterClassIndex] or {}
+    local numberOfSequences = #sequences
+    FauxScrollFrame_Update(frame.scrollBar, numberOfSequences,
                            MAX_SEQUENCE_ROWS, SEQUENCES_ROW_HEIGHT, nil, nil,
                            nil, nil, nil, nil, true)
+    -- if numberOfSequences == 0 then return end
     local offset = FauxScrollFrame_GetOffset(frame.scrollBar)
     for i = 1, MAX_SEQUENCE_ROWS do
         local index = i + offset
         local row = frame.rows[i]
-        row:SetSequence(TalentSequenceSavedSequences[characterClassIndex][index])
+        row:SetSequence(sequences[index])
     end
 end
 
