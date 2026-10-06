@@ -16,4 +16,5 @@ ts.L = {
     UNNAMED = "<unnamed>",
     IMPORT_FAILED = "Import failed. Supported formats: Wowhead, Warcraft Tavern, or Talent Planner URL, or exported JSON.",
     NO_ORDER = "This URL doesn't include a talent order. Enable \"Talent Order\" in the Wowhead calculator before copying the URL.",
+    FLAVOR_MISMATCH = "That build is for a different WoW Classic version than this client. Import a Classic Era build here, or a TBC build on Burning Crusade Classic.",
 }

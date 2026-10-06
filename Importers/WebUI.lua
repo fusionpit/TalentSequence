@@ -163,8 +163,15 @@ function ts.WebUITalents.ImportJSON(input)
         return nil, classToken, "IMPORT_FAILED"
     end
 
-    local meta = ts.TalentResolver.GetFlavorMeta()
-    local startingLevel = meta and meta.startingLevel or 9
+    local flavorKey = data.flavor
+    if type(flavorKey) ~= "string" or flavorKey == "" then
+        flavorKey = ts.Flavor.GetKey()
+    end
+
+    -- Reject imports built for a different ruleset than this client.
+    if flavorKey ~= ts.Flavor.GetKey() then
+        return nil, classToken, "FLAVOR_MISMATCH"
+    end
 
     local result = {}
     for i, t in ipairs(talents) do
@@ -178,7 +185,7 @@ function ts.WebUITalents.ImportJSON(input)
                 tab = resolved.tab,
                 index = resolved.index,
                 rank = resolved.rank,
-                level = startingLevel + i,
+                level = ts.Flavor.GetTalentPointLevel(flavorKey, i),
                 spellId = spellId,
             })
         elseif type(t) == "table" then
@@ -191,7 +198,7 @@ function ts.WebUITalents.ImportJSON(input)
                     tab = resolved.tab,
                     index = resolved.index,
                     rank = resolved.rank,
-                    level = t.level or (startingLevel + i),
+                    level = t.level or ts.Flavor.GetTalentPointLevel(flavorKey, i),
                     spellId = t.spellId,
                 })
             elseif t.tab and t.index and t.rank and t.level then

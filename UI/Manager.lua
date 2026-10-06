@@ -87,6 +87,8 @@ function ts:ImportTalents(talentsString)
     if (talents == nil) then
         if (err == "NO_ORDER") then
             print("|cffff6060Talent Planner:|r " .. ts.L.NO_ORDER)
+        elseif (err == "FLAVOR_MISMATCH") then
+            print("|cffff6060Talent Planner:|r " .. ts.L.FLAVOR_MISMATCH)
         else
             print("|cffff6060Talent Planner:|r " .. ts.L.IMPORT_FAILED)
         end

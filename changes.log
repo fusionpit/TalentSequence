@@ -1,3 +1,11 @@
+* 5.0.0
+    - Rewrote client support for currently live classic talent-tree versions: Classic Era / Hardcore / Season of Discovery (Interface 11509) and Burning Crusade Classic Anniversary (Interface 20506)
+    - Added Core/Compat.lua for C_AddOns, spell info, and TooltipDataProcessor-compatible spell tooltips
+    - Added Core/Flavor.lua for ruleset detection and talent point level lookup
+    - Replaced fragile ToggleTalentFrame-only init with ADDON_LOADED / PLAYER_LOGIN talent UI attachment
+    - Reject imports built for a different Classic ruleset than the current client
+    - Updated README and packaging notes for the live Classic clients
+
 * 3.2.3
     - Renamed the active sequence button from Load to Manage
     - Renamed the import action to Import URL for clearer sequence management UI

@@ -175,8 +175,11 @@ function ts.WarcraftTavernTalents.GetTalents(input)
         return nil, nil, "INVALID_URL"
     end
 
-    local startingLevel = STARTING_LEVELS[flavor]
-    if not startingLevel then
+    if flavor ~= ts.Flavor.GetKey() then
+        return nil, classToken, "FLAVOR_MISMATCH"
+    end
+
+    if not STARTING_LEVELS[flavor] then
         return nil, classToken, "IMPORT_FAILED"
     end
 
@@ -232,7 +235,7 @@ function ts.WarcraftTavernTalents.GetTalents(input)
                 tab = currentTab + 1,
                 index = talentIndex,
                 rank = rank,
-                level = startingLevel + pointsSpent,
+                level = ts.Flavor.GetTalentPointLevel(flavor, pointsSpent),
                 spellId = spellId,
             })
         end

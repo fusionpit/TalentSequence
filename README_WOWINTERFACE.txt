@@ -1,8 +1,17 @@
 [SIZE="7"]Talent Planner[/SIZE]
 
-Talent Planner is a WoW AddOn for Classic Anniversary Edition and Burning Crusade Classic that displays a planned talent order next to the in-game talent window while you level.
+Talent Planner is a WoW AddOn for the live Classic clients that still use the classic three-tree talent system:
+
+[LIST]
+[*]Classic Era / Hardcore / Season of Discovery
+[*]Burning Crusade Classic Anniversary
+[/LIST]
+
+It displays a planned talent order next to the in-game talent window while you level.
 
 Import a talent sequence from Wowhead, Warcraft Tavern, or the Talent Planner Web UI, save multiple sequences per character, and load the one you want to follow in-game.
+
+MoP Classic and modern retail use a different talent system, so a classic point-order planner is not applicable there.
 
 [SIZE="7"]Supports[/SIZE]
 
@@ -11,7 +20,7 @@ Import a talent sequence from Wowhead, Warcraft Tavern, or the Talent Planner We
 [*]Wowhead TBC talent calculator URLs
 [*]Warcraft Tavern talent calculator URLs
 [*]Talent Planner Web UI exports and URLs: [URL="https://mikeacjones.github.io/TalentPlanner-WebUI"]mikeacjones.github.io/TalentPlanner-WebUI[/URL]
-[*]Blizzard talent UI
+[*]Blizzard talent UI on Classic Era and TBC Classic Anniversary
 [/LIST]
 
 [SIZE="7"]In-Game Previews[/SIZE]
@@ -42,7 +51,7 @@ Import a talent sequence from Wowhead, Warcraft Tavern, or the Talent Planner We
 
 [SIZE="7"]Import Coverage[/SIZE]
 
-TBC Wowhead imports use explicit class and tree mappings for all nine classes. Classic Wowhead support is also available.
+Each client only accepts builds for its own ruleset (Classic Era builds on Era/SoD/Hardcore, TBC builds on Burning Crusade Classic Anniversary).
 
 Warcraft Tavern URLs and Talent Planner Web UI URLs / exports are also supported.
 

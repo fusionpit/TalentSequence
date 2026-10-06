@@ -4,7 +4,7 @@ set -eu
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 RELEASE_DIR="$ROOT_DIR/.release"
 ADDON_DIR="$RELEASE_DIR/TalentPlanner"
-VERSION="$(awk '/^## Version:/ { print $3; exit }' "$ROOT_DIR/TalentPlanner_TBC.toc")"
+VERSION="$(awk '/^## Version:/ { print $3; exit }' "$ROOT_DIR/TalentPlanner_Vanilla.toc")"
 BRANCH="$(git -C "$ROOT_DIR" rev-parse --abbrev-ref HEAD)"
 SAFE_BRANCH="$(printf '%s' "$BRANCH" | tr '/' '-')"
 ZIP_NAME="TalentPlanner-${VERSION}-${SAFE_BRANCH}.zip"

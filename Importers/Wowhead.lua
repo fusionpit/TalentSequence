@@ -139,6 +139,9 @@ function ts.WowheadTalents.GetTalents(talentString)
     if not flavorKey then
         return nil, classToken, "INVALID_URL"
     end
+    if flavorKey ~= ts.Flavor.GetKey() then
+        return nil, classToken, "FLAVOR_MISMATCH"
+    end
     local flavorMeta = GetFlavorMetadata(flavorKey)
     if not flavorMeta then
         return nil, classToken, "IMPORT_FAILED"

@@ -7,7 +7,6 @@ local SetItemButtonTexture = SetItemButtonTexture
 local UnitLevel = UnitLevel
 local LearnTalent = LearnTalent
 local CreateFrame = CreateFrame
-local GetSpellInfo = GetSpellInfo
 local GetNumTalentTabs = GetNumTalentTabs
 local FauxScrollFrame_SetOffset = FauxScrollFrame_SetOffset
 local FauxScrollFrame_GetOffset = FauxScrollFrame_GetOffset
@@ -58,11 +57,11 @@ local function BuildLiveTalentNameLookup()
 end
 
 local function ResolveTalentLocationFromSpellId(talentLookup, spellId, fallbackTalent)
-    if not spellId or not GetSpellInfo then
+    if not spellId then
         return nil
     end
 
-    local spellName, _, spellIcon = GetSpellInfo(spellId)
+    local spellName, _, spellIcon = ts.Compat.GetSpellInfo(spellId)
     if not spellName then
         return nil
     end
@@ -367,16 +366,19 @@ function ts.CreateMainFrame()
     mainFrame.scrollBar = scrollBar
 
     local tooltip = ts.tooltip
-    tooltip:HookScript("OnTooltipSetSpell", function(self)
-        if (self.talentTrainName) then
-            self:AddLine(" ")
-            self:AddLine(format(
-                "Train |cff71d5ff[%s]|r to |cffffd100(%d/%d)|r",
-                self.talentTrainName, self.talentTrainRank,
-                self.talentTrainMaxRank), 1, 1, 1)
-            self:Show()
+    ts.Compat.HookSpellTooltip(function(tip)
+        if tip ~= tooltip then
+            return
         end
-    end)
+        if tip.talentTrainName then
+            tip:AddLine(" ")
+            tip:AddLine(format(
+                "Train |cff71d5ff[%s]|r to |cffffd100(%d/%d)|r",
+                tip.talentTrainName, tip.talentTrainRank,
+                tip.talentTrainMaxRank), 1, 1, 1)
+            tip:Show()
+        end
+    end, tooltip)
     local rows = {}
     for i = 1, MAX_TALENT_ROWS do
         local row = CreateFrame("Frame", "$parentRow" .. i, mainFrame)
@@ -417,7 +419,10 @@ function ts.CreateMainFrame()
             tooltip.talentTrainRank = self.talentRank
             tooltip.talentTrainMaxRank = self.talentMaxRank
             if (self.spellId) then
-                tooltip:SetSpellByID(self.spellId)
+                if not ts.Compat.SetSpellTooltip(tooltip, self.spellId) then
+                    tooltip:SetText(self.talentName or "", nil, nil, nil, nil, true)
+                    tooltip:Show()
+                end
             elseif (self.tooltip) then
                 tooltip:SetText(self.tooltip, nil, nil, nil, nil, true)
                 if (self.talentName and self.talentRank and self.talentMaxRank) then

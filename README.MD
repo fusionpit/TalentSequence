@@ -1,8 +1,15 @@
 # Talent Planner
 
-Talent Planner is a WoW AddOn for Classic Anniversary Edition and Burning Crusade Classic that displays a planned talent order next to the in-game talent window while you level.
+Talent Planner is a WoW AddOn for the live Classic clients that still use the classic three-tree talent system:
+
+- **Classic Era / Hardcore / Season of Discovery** (Interface `11509`)
+- **Burning Crusade Classic Anniversary** (Interface `20506`)
+
+It displays a planned talent order next to the in-game talent window while you level.
 
 Import a talent sequence from Wowhead, Warcraft Tavern, or the Talent Planner Web UI, save multiple sequences per character, and load the one you want to follow in-game.
+
+MoP Classic and modern retail use a different talent system, so a classic point-order planner is not applicable there.
 
 ## Supports
 
@@ -10,7 +17,7 @@ Import a talent sequence from Wowhead, Warcraft Tavern, or the Talent Planner We
 - Wowhead TBC talent calculator URLs
 - Warcraft Tavern talent calculator URLs
 - Talent Planner Web UI exports and URLs: https://mikeacjones.github.io/TalentPlanner-WebUI
-- Blizzard talent UI
+- Blizzard talent UI on Classic Era and TBC Classic Anniversary
 
 ## In-Game Previews
 
@@ -37,7 +44,7 @@ Import a talent sequence from Wowhead, Warcraft Tavern, or the Talent Planner We
 
 ## Import Coverage
 
-TBC Wowhead imports use explicit class and tree mappings for all nine classes. Classic Wowhead support is also available.
+Each client only accepts builds for its own ruleset (Classic Era builds on Era/SoD/Hardcore, TBC builds on Burning Crusade Classic Anniversary).
 
 Warcraft Tavern URLs and Talent Planner Web UI URLs / exports are also supported.
 
@@ -53,6 +60,8 @@ Found a bug or have a feature request? Please [open an issue on GitHub](https://
 
 ### Source Layout
 
+- `Core/Compat.lua` — Classic Era / TBC Anniversary API compatibility helpers
+- `Core/Flavor.lua` — client ruleset detection and talent point level helpers
 - `Core/Database.lua` — central data access layer
 - `Importers/WowheadData_Classic.lua` — Classic Wowhead talent name mappings
 - `Importers/WowheadData_TBC.lua` — TBC Wowhead talent name mappings
@@ -76,9 +85,11 @@ For local builds:
 
 ### Installing Locally
 
-Copy the packaged `TalentPlanner/` folder into:
+Copy the packaged `TalentPlanner/` folder into the matching client AddOns directory:
 
 ```text
+World of Warcraft/_classic_era_/Interface/AddOns/
+World of Warcraft/_classic_tbc_/Interface/AddOns/
 World of Warcraft/_anniversary_/Interface/AddOns/
 ```
 

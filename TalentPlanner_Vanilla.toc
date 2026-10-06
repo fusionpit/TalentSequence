@@ -1,14 +1,16 @@
-## Interface: 11508
+## Interface: 11509
 ## Title: Talent Planner
-## Version: 4.3.1
+## Version: 5.0.0
 ## Author: Moregelen, Sveng
-## Notes: Shows what order you should spend talent points in. Import from Wowhead, Talent Planner web UI, or JSON. Compatible with WoW Classic Anniversary Edition.
+## Notes: Shows what order you should spend talent points in. Import from Wowhead, Talent Planner web UI, or JSON. Compatible with Classic Era, Hardcore, and Season of Discovery.
 ## SavedVariables: TalentPlannerAccountSavedSequences, TalentPlannerAccountCollapsedClasses, TalentPlannerAccountNextSequenceId
 ## SavedVariablesPerCharacter: IsTalentPlannerExpanded, TalentPlannerTalents, TalentPlannerSavedSequences, TalentPlannerActiveSequenceIds
 ## X-Testers: /u/thisisverytricky
 ## X-Curse-Project-ID: 570281
 ## X-WoWI-ID: 26216
 
+Core/Compat.lua
+Core/Flavor.lua
 Core/Database.lua
 Core/Migrations.lua
 Localization/Localization.xml

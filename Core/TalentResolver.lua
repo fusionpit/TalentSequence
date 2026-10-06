@@ -4,6 +4,8 @@ local strfind = strfind
 local strsub = strsub
 local strlen = strlen
 local pairs = pairs
+local ipairs = ipairs
+local tinsert = tinsert
 
 ts.TalentResolver = {}
 
@@ -28,8 +30,20 @@ local function BuildCacheForClass(classToken)
     local spellLookup = {}
     local locLookup = {}
 
-    for _, flavorMap in pairs(talentData) do
-        local classMap = flavorMap[classToken]
+    local preferredFlavor = ts.Flavor and ts.Flavor.GetKey and ts.Flavor.GetKey()
+    local flavorOrder = {}
+    if preferredFlavor and talentData[preferredFlavor] then
+        tinsert(flavorOrder, preferredFlavor)
+    end
+    for flavorKey in pairs(talentData) do
+        if flavorKey ~= "__meta" and flavorKey ~= preferredFlavor then
+            tinsert(flavorOrder, flavorKey)
+        end
+    end
+
+    for _, flavorKey in ipairs(flavorOrder) do
+        local flavorMap = talentData[flavorKey]
+        local classMap = flavorMap and flavorMap[classToken]
         if classMap then
             local meta = flavorMap.__meta
             local singleTokens = meta and meta.singlePointTokens
@@ -90,13 +104,8 @@ function ts.TalentResolver.GetMaxRank(classToken, tab, index)
     return #entry.ranks
 end
 
-function ts.TalentResolver.GetFlavorMeta()
-    local talentData = GetTalentData()
-    if not talentData then return nil end
-    for _, flavorMap in pairs(talentData) do
-        return flavorMap.__meta
-    end
-    return nil
+function ts.TalentResolver.GetFlavorMeta(flavorKey)
+    return ts.Flavor.GetMeta(flavorKey)
 end
 
 function ts.TalentResolver.InvalidateCache()
